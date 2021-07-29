@@ -1,21 +1,20 @@
 #include "parsergen/lexer.hpp"
-#include "utils.hpp"
+#include "iostream"
 
 //#define DEBUG
+
 namespace Parsergen {
 
-Token::Token(std::string type, std::string value, int lineno, int column) {
+Token::Token(std::string type, std::string value, Position position) {
     this->type = type;
     this->value = value;
-    this->lineno = lineno;
-    this->column = column;
+    this->position = position;
 }
 
 bool Token::operator ==(Token &other) const {
     return type == other.type
         && value == other.value
-        && lineno == other.lineno
-        && column == other.column;
+        && position == other.position;
 }
 
 LexRule::LexRule(
@@ -29,7 +28,7 @@ LexRule::LexRule(
 LexRule::LexRule(
     std::string name,
     std::vector<std::regex> patterns,
-    std::function<void (Lexer *lexer, Token *tok)> modifier
+    TokenModifierFunc modifier
 ){
     this->name = name;
     this->patterns = patterns;
@@ -65,7 +64,8 @@ Lexer::Lexer(){
 
 void Lexer::setText(std::string text){
     this->text = text;
-    this->source = text;
+    this->source = std::string_view(this->text);
+    this->currentLine = std::string_view(this->source.data(), 0);
 }
 
 std::string Lexer::getText(){
@@ -73,8 +73,8 @@ std::string Lexer::getText(){
 }
 
 void Lexer::newline(){
-    lines.push_back(currentLine);
-    currentLine = std::string();
+    lines.push_back(std::string(currentLine));
+    currentLine = std::string_view(source.data(), 0);
     lineno += 1;
     column = 0;
 }
@@ -82,22 +82,31 @@ void Lexer::newline(){
 void Lexer::StepSource(int amount){
     column += amount;
     // throws std::out_of_range if string is too short
-    currentLine += source.substr(0, amount);
+    currentLine = std::string_view(currentLine.data(), currentLine.length() + amount);
+    //currentLine += source.substr(0, amount);
     source = source.substr(amount);
 }
 
 Token Lexer::GetNextToken(){
     for (auto const &rule : rules){
         for (auto const &pattern : rule.patterns){
-            std::smatch sm;
-            bool matches = std::regex_search(source, sm, pattern);
+            utils::svmatch sm;
+            // https://en.cppreference.com/w/cpp/regex/regex_search
+            // The overload (3) is prohibited from accepting temporary strings,
+            // otherwise this function populates match_results m with string 
+            // iterators that become invalid immediately.
+            bool matches = utils::regex_search(source.data(), sm, pattern);
             if (matches){
                 if (sm.position() == 0){
                     // match found
-                    Token tok = Token(rule.name, sm.str(), lineno, column);
+                    Token tok = Token(rule.name, sm.str(), Position(lineno, column));
                     StepSource(sm.length());
+                    //std::cout << rule.name << ": " << sm.str() << std::endl;
                     if (rule.modifier)
-                        rule.modifier(this, &tok);
+                        rule.modifier(tok, sm);
+                    #ifdef DEBUG
+                    std::cout << rule.name << ": " << sm.str() << std::endl;
+                    #endif
                     return tok;
                 }
             }
@@ -107,7 +116,7 @@ Token Lexer::GetNextToken(){
         fmt::format("Found Unexpected character '{}' while tokenizing!", source[0]),
         lineno,
         column,
-        currentLine + source[0]
+        std::string(currentLine) + source[0]
     );
 }
 
@@ -125,7 +134,7 @@ void Lexer::Lex(){
             // There is no token, ignore silently
         }
     }
-    lines.push_back(currentLine); // push final line
+    lines.push_back(std::string(currentLine)); // push final line
 }
 
 

@@ -1,4 +1,6 @@
 #include "parsergen/lexer.hpp"
+#include "parsergen/grammar_ast.hpp"
+#include "parsergen/utils.hpp"
 #include <iostream>
 #include <fmt/format.h>
 
@@ -8,39 +10,22 @@ class TestLexer : public Lexer {
 public:
     TestLexer() : Lexer() {
         rules = {
-            LexRule(
-                "id",
-                std::vector<std::regex>{
-                    std::regex("[a-z]+")
-                }
-            ),
-            LexRule(
-                "NEWLINE",
-                std::vector<std::regex>{
-                    std::regex("\n")
-                },
-                [this] (Lexer *lexer, Token *tok) {
+            S_RULE("id", "[a-z]+"),
+            F_RULE("NEWLINE", "\n",
+                [this] (Token &tok, utils::svmatch &sm) {
                     newline();
                 }
             ),
-            LexRule(
-                "comment",
-                std::vector<std::regex>{
-                    std::regex("#.*")
-                },
-                [this] (Lexer *lexer, Token *tok) {
+            F_RULE("COMMENT", "#.*",
+                [this] (Token &tok, utils::svmatch &sm) {
                     throw NoToken();
                 }
             ),
-            LexRule(
-                "SPACE",
-                std::vector<std::regex>{
-                    std::regex(" ")
-                },
-                [this] (Lexer *lexer, Token *tok) {
+            F_RULE("SPACE", " ",
+                [this] (Token &tok, utils::svmatch &sm) {
                     throw NoToken();
                 }
-            )
+            ),
         };
     }
 };

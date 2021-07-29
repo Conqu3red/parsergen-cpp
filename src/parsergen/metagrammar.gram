@@ -1,0 +1,39 @@
+@header = '
+from .grammar_utils import *
+
+'
+@class_name = 'GrammarParser'
+
+parser_definition  : s=section* EOF { ParserDefinition(s) }; 
+
+section
+    :  s=statement { s };
+    :  s=configuration { s };
+
+configuration  :  AT name=ID EQ value=STRING { ConfigurationCall(name.value, value.value) };
+statement  :  n=(ID? COLON)? es=expr* a=ACTION? TERMINATE { Statement(
+    n[0].value if not isinstance(n, Filler) and not isinstance(n[0], Filler) else "<>", 
+    es, 
+    action=a.value if not isinstance(a, Filler) else None
+) };
+
+expr_list  :  es=expr* { ExprList(es) };
+expr  :  name=(ID EQ)? v=or_op { NamedItem(name[0].value, v) if not isinstance(name, Filler) else v };
+or_op  :  v=star_op others=(OR star_op)* { OrOp(exprs=[v]+[o[1] for o in others]) if len(others) > 0 else v };
+star_op  :  v=plus_op s=STAR? { ZeroOrMore(v) if not isinstance(s, Filler) else v };
+plus_op  :  v=qmark_op s=PLUS? { OneOrMore(v) if not isinstance(s, Filler) else v };
+qmark_op  :  v=term s=QMARK? { ZeroOrOne(v) if not isinstance(s, Filler) else v };
+
+term
+    :  AND f=factor { AndPredicate(f) };
+    :  NOT f=factor { NotPredicate(f) };
+    :  f=factor { f };
+
+factor
+    :  i=item { i };
+    :  LPAREN es=expr_list RPAREN { es };
+
+item
+    :  i=ID { StatementPointer(i.value) };
+    :  i=TOKEN { TokenPointer(i.value) };
+    :  i=STRING { ConstantString(i.value) };

@@ -1,4 +1,5 @@
 #include <string>
+#include <string_view>
 #include <vector>
 #include <stdio.h>
 #include <string.h>
@@ -7,30 +8,46 @@
 #include <memory>
 #include <stdexcept>
 #include "fmt/core.h"
+#include "parsergen/utils.hpp"
 
 #pragma once
 
+#define REGEX_SYNTAX_TYPE std::regex_constants::ECMAScript
+
 namespace Parsergen {
+
+class Position {
+public:
+    int lineno { 0 };
+    int column { 0 };
+    Position(){}
+    Position(int lineno, int column) : lineno(lineno), column(column) {}
+
+    bool operator ==(Position &other) const {
+        return lineno == other.lineno && column == other.column;
+    }
+};
 
 class Token {
 public:
     std::string type;
     std::string value;
-    int lineno;
-    int column;
+    Position position;
 
-    Token(std::string type, std::string value, int lineno=0, int column=0);
+    Token(std::string type, std::string value, Position position);
 
     bool operator ==(Token &other) const;
 };
 
 class Lexer;
 
+typedef std::function<void (Token &tok, utils::svmatch &sm)> TokenModifierFunc;
+
 class LexRule {
 public:
     std::string name;
     std::vector<std::regex> patterns;
-    std::function<void (Lexer *lexer, Token *tok)> modifier;
+    TokenModifierFunc modifier;
 
     LexRule(
         std::string name,
@@ -40,7 +57,7 @@ public:
     LexRule(
         std::string name,
         std::vector<std::regex> patterns,
-        std::function<void (Lexer *lexer, Token *tok)> modifier
+        TokenModifierFunc modifier
     );
 };
 
@@ -69,7 +86,7 @@ private:
 
 class Lexer {
 public:
-    std::string currentLine;
+    std::string_view currentLine;
     std::vector<Token> tokens;
     std::vector<std::string> lines;
     std::vector<LexRule> rules;
@@ -81,7 +98,8 @@ public:
     void Lex();
 protected:
     std::string text;
-    std::string source;
+    std::string_view source;
+    constexpr bool source_left() { return source.length() > 0; }
     int column = 0;
     int lineno = 0;
     void newline();
