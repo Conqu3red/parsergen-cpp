@@ -17,6 +17,10 @@ bool Token::operator ==(Token &other) const {
         && position == other.position;
 }
 
+std::string Token::error_format(){
+    return fmt::format("'{}' ({})", value, type);
+}
+
 LexRule::LexRule(
     std::string name,
     std::vector<std::regex> patterns
@@ -137,5 +141,40 @@ void Lexer::Lex(){
     lines.push_back(std::string(currentLine)); // push final line
 }
 
+int TokenStream::mark(){
+    return m_pos;
+}
 
-};
+void TokenStream::set_pos(int pos){
+    m_pos = pos;
+}
+
+Token &TokenStream::get_token(){
+    Token &tok = peek_token();
+    m_pos += 1;
+    return tok;
+}
+
+Token &TokenStream::peek_token(){
+    if (m_pos >= lexer->tokens.size()){
+        Position eof_pos(0,0);
+        if (lexer->tokens.size() > 0){
+            eof_pos = lexer->tokens[lexer->tokens.size() - 1].position;
+            eof_pos.column += 1;
+        }
+        eof_tok = Token("EOF", "<EOF>", eof_pos);
+        return eof_tok;
+    }
+    return lexer->tokens[m_pos];
+}
+
+Token &TokenStream::peek_token(int pos){
+    int old = m_pos;
+    m_pos = pos;
+    Token &tok = peek_token();
+    m_pos = old;
+    return tok;
+}
+
+
+}

@@ -1,16 +1,23 @@
 #include "parsergen/lexer.hpp"
 #include "parsergen/grammar_ast.hpp"
 #include "parsergen/utils.hpp"
+#include "parsergen/parser_utils.hpp"
+#include "parsergen/parser_generator.hpp"
+
+#include <list>
+#include <string>
 #include <iostream>
 #include <fmt/format.h>
 
 using namespace Parsergen;
+using namespace AST;
 
 class TestLexer : public Lexer {
 public:
     TestLexer() : Lexer() {
         rules = {
-            S_RULE("id", "[a-z]+"),
+            S_RULE("TEXT", "text"),
+            S_RULE("ID", "[a-z]+"),
             F_RULE("NEWLINE", "\n",
                 [this] (Token &tok, utils::svmatch &sm) {
                     newline();
@@ -30,13 +37,130 @@ public:
     }
 };
 
+class TextNode : public Expr {
+public:
+    std::string class_name() override { return "TextNode - '" + text + "'"; }
+    std::string text;
+    TextNode(std::string text, Position start, Position end)
+        : Expr(start, end), text(text)
+    {}
+};
+
+class Top : public Expr {
+public:
+    std::string class_name() override { return "Top"; }
+    std::list<std::shared_ptr<TextNode>> children;
+    Top(std::list<std::shared_ptr<TextNode>> children, Position start, Position end)
+        : Expr(start, end), children(children)
+    {}
+};
+
+
+class TestParser : public Parser {
+public:
+    using Parser::Parser;
+
+    /*
+        start[Top] : node* { p1, POSITION };
+        node[TextNode] : TEXT ID { p2.value, POSITION };
+
+
+    PLAN: everything can return optionals?, that way we know if it succeeded/failed
+    things like TOK? should return optional<optional<something>> maybe
+    */
+    
+    std::optional<std::shared_ptr<Top>> start(){
+        Position start, end;
+        int pos = mark();
+        for (;;){
+            {            
+                start = current_pos();
+                auto _p1 = _loop_0<TextNode>();
+                if (!_p1.has_value()){
+                    fail();
+                    break;
+                }
+                auto &p1 = _p1.value();
+                end = current_pos();
+                // match
+                return std::make_shared<Top>(p1, POSITION);
+            }
+        }
+        set_pos(pos);
+        return {};
+    }
+
+    template <typename T>
+    std::optional<std::list< std::shared_ptr<T> >> _loop_0(){
+        Position start, end;
+        std::list< std::shared_ptr<T> > children;
+        while (true){
+            int pos = mark();
+            
+            auto _p1 = node();
+            if (!_p1.has_value()){
+                set_pos(pos);
+                break;
+            }
+            auto &p1 = _p1.value();
+    
+            children.push_back(p1);
+        }
+
+        return children;
+    }
+
+    std::optional<std::shared_ptr<TextNode>> node(){
+        Position start, end;
+        int pos = mark();
+        for (;;){
+            {
+                start = current_pos();
+                auto _p1 = expect("TEXT");
+                if (!_p1.has_value()){
+                    fail();
+                    break;
+                }
+                auto &p1 = _p1.value();
+
+                auto _p2 = expect("ID");
+                if (!_p2.has_value()){
+                    fail();
+                    break;
+                }
+                auto &p2 = _p2.value();
+                end = current_pos();
+
+                // match
+                return std::make_shared<TextNode>(p2.value, POSITION);
+            }
+        }
+        set_pos(pos);
+        return {};
+    }
+
+};
+
 int main(){
     TestLexer l;
-    l.setText("abc # comment \n something");
+    std::string input = "text abc text def";
+    l.setText(input);
     l.Lex();
     std::cout << "Start string: " << l.getText() << std::endl;
     for (auto const& tok : l.tokens){
         fmt::print("type: '{}', value: '{}'\n", tok.type, tok.value);
     }
+
+    auto stream = std::make_shared<TokenStream>(TokenStream(std::make_shared<TestLexer>(l)));
+
+    TestParser p(stream);
+
+    if (auto top = p.start()){
+        std::cout << top.value()->class_name() << "\n";
+        for (auto &child : top.value()->children){
+            std::cout << child->class_name() << "\n";
+        }
+    }
+
     return 0;
 }

@@ -35,6 +35,7 @@ public:
     Position position;
 
     Token(std::string type, std::string value, Position position);
+    std::string error_format();
 
     bool operator ==(Token &other) const;
 };
@@ -107,4 +108,19 @@ protected:
     void StepSource(int amount);
 };
 
+class TokenStream {
+public:
+    std::shared_ptr<Lexer> lexer;
+    TokenStream(std::shared_ptr<Lexer> lexer) : lexer(lexer) {}
+    int mark();
+    void set_pos(int pos);
+    Token &get_token();
+    Token &peek_token();
+    Token &peek_token(int pos);
+
+private:
+    int m_pos = 0;
+    Token eof_tok { Token("EOF", "<EOF>", Position(0, 0)) };
 };
+
+}

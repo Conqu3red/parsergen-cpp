@@ -4,6 +4,7 @@
 #include <string_view>
 #include <regex>
 #include <string>
+#include <functional>
 
 #pragma once
 
@@ -88,6 +89,25 @@ inline bool regex_search(
     std::regex_constants::match_flag_type flags = std::regex_constants::match_default
 ){
     return std::regex_search(sv.begin(), sv.end(), e, flags);
+}
+
+static std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+    }
+    return str;
+}
+
+static bool endsWith(const std::string& str, const std::string& suffix)
+{
+    return str.size() >= suffix.size() && 0 == str.compare(str.size()-suffix.size(), suffix.size(), suffix);
+}
+
+static bool startsWith(const std::string& str, const std::string& prefix)
+{
+    return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
 }
 
 }

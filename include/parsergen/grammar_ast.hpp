@@ -1,5 +1,7 @@
 #include <string>
+#include <list>
 #include <vector>
+#include <memory>
 #include <parsergen/lexer.hpp>
 #pragma once
 
@@ -29,6 +31,7 @@ namespace AST {
 class ASTNode {
 public:
     virtual std::string class_name() { return "ASTNode"; }
+    bool is(std::string name) { return class_name() == name; }
     Position start() const {
         return m_start;
     }
@@ -45,24 +48,33 @@ public:
         m_end = end;
     }
 
-protected:
     ASTNode(Position start, Position end)
         : m_start(start)
         , m_end(end)
     {}
+protected:
+    virtual ~ASTNode(){}
 private:
     Position m_start;
     Position m_end;
     // TODO: add filename property
 };
 
-class Terminator : public ASTNode {
+class Expr : public ASTNode {
 public:
+    std::string class_name() override { return "Expr"; }
     using ASTNode::ASTNode;
+};
+
+class Terminator : public Expr {
+public:
+    std::string class_name() override { return "Terminator"; }
+    using Expr::Expr;
 };
 
 class Pointer : public Terminator {
 public:
+    virtual std::string class_name() { return "Pointer"; }
     std::string target;
     Pointer(std::string target, Position start, Position end)
         : target(target)
@@ -70,16 +82,21 @@ public:
     {}
 };
 
-class StatementPointer : Pointer {
-    using Pointer::Pointer;
-};
-
-class TokenPointer : Pointer {
-    using Pointer::Pointer;
-};
-
-class ConstantString : Terminator {
+class StatementPointer : public Pointer {
 public:
+    virtual std::string class_name() { return "StatementPointer"; }
+    using Pointer::Pointer;
+};
+
+class TokenPointer : public Pointer {
+public:
+    virtual std::string class_name() { return "TokenPointer"; }
+    using Pointer::Pointer;
+};
+
+class ConstantString : public Terminator {
+public:
+    virtual std::string class_name() { return "ConstantString"; }
     std::string value;
     ConstantString(std::string value, Position start, Position end)
         : value(value)
@@ -87,86 +104,104 @@ public:
     {}
 };
 
-class Expr : ASTNode {
+class ExprList : public Expr {
 public:
-    using ASTNode::ASTNode;
-};
-
-class ExprList : ASTNode {
-public:
-    std::vector<Expr> exprs;
-    ExprList(std::vector<Expr> exprs, Position start, Position end)
+    virtual std::string class_name() { return "ExprList"; }
+    std::string handle_name = "";
+    std::vector<std::shared_ptr<Expr>> exprs;
+    
+    ExprList(std::vector<std::shared_ptr<Expr>> exprs, Position start, Position end)
         : exprs(exprs)
-        , ASTNode(start, end)
+        , Expr(start, end)
     {}
 };
 
-class Quanitifier : Expr {
+class Quanitifier : public Expr {
 public:
-    Expr expr;
-    Quanitifier(Expr expr, Position start, Position end)
+    virtual std::string class_name() { return "Quantifier"; }
+    std::string handle_name = "";
+    std::shared_ptr<Expr> expr;
+    Quanitifier(std::shared_ptr<Expr> expr, Position start, Position end)
         : expr(expr)
         , Expr(start, end)
     {}
 };
 
-class ZeroOrMore : Quanitifier {
+class ZeroOrMore : public Quanitifier {
+public:
+    virtual std::string class_name() { return "ZeroOrMore"; }
     using Quanitifier::Quanitifier;
 };
-class OneOrMore : Quanitifier {
+class OneOrMore : public Quanitifier {
+public:
+    virtual std::string class_name() { return "OneOrMore"; }
     using Quanitifier::Quanitifier;
 };
-class ZeroOrOne : Quanitifier {
+class ZeroOrOne : public Quanitifier {
+public:
+    virtual std::string class_name() { return "ZeroOrOne"; }
     using Quanitifier::Quanitifier;
 };
 
-class OrOp : Expr {
+class OrOp : public Expr {
 public:
-    std::vector<Expr> exprs;
-    OrOp(std::vector<Expr> exprs, Position start, Position end)
+    virtual std::string class_name() { return "OrOp"; }
+    std::vector<std::shared_ptr<Expr>> exprs;
+    OrOp(std::vector<std::shared_ptr<Expr>> exprs, Position start, Position end)
         : exprs(exprs)
         , Expr(start, end)
     {}
 };
 
-class NamedItem : Expr {
+class NamedItem : public Expr {
 public:
+    virtual std::string class_name() { return "NamedItem"; }
     std::string name;
-    Expr expr;
-    NamedItem(std::string name, Expr expr, Position start, Position end)
+    std::shared_ptr<Expr> expr;
+    NamedItem(std::string name, std::shared_ptr<Expr> expr, Position start, Position end)
         : name(name)
         , expr(expr)
         , Expr(start, end)
     {}
 };
 
-class Predicate : Expr {
+class Predicate : public Expr {
 public:
-    Expr expr;
-    Predicate(Expr expr, Position start, Position end)
+    virtual std::string class_name() { return "Predicate"; }
+    std::shared_ptr<Expr> expr;
+    Predicate(std::shared_ptr<Expr> expr, Position start, Position end)
         : expr(expr)
         , Expr(start, end)
     {}
 };
 
-class AndPredicate : Predicate {
+class AndPredicate : public Predicate {
+public:
+    virtual std::string class_name() { return "AndPredicate"; }
     using Predicate::Predicate;
 };
-class NotPredicate : Predicate {
+class NotPredicate : public Predicate {
+public:
+    virtual std::string class_name() { return "NotPredicate"; }
     using Predicate::Predicate;
 };
 
-class Section : ASTNode {
+class Section : public ASTNode {
+public:
+    virtual std::string class_name() { return "Section"; }
     using ASTNode::ASTNode;
 };
 
-class Statement : Section {
+class Statement : public Section {
 public:
+    virtual std::string class_name() { return "Statement"; }
     std::string name;
-    std::vector<Expr> exprs;
+    std::string return_type;
+    std::vector<std::shared_ptr<Expr>> exprs;
     std::string action;
-    Statement(std::string name, std::vector<Expr> exprs, std::string action, Position start, Position end)
+    Statement(std::string name, std::string return_type, std::vector<std::shared_ptr<Expr>> exprs, std::string action, Position start, Position end)
         : name(name)
+        , return_type(return_type)
         , exprs(exprs)
         , action(action)
         , Section(start, end)
@@ -174,8 +209,9 @@ public:
 
 };
 
-class ConfigurationCall : Section {
+class ConfigurationCall : public Section {
 public:
+    virtual std::string class_name() { return "ConfigurationCall"; }
     std::string name;
     std::string value;
     ConfigurationCall(std::string name, std::string value, Position start, Position end)
@@ -185,13 +221,24 @@ public:
     {}
 };
 
-class ParserDefinition : ASTNode {
+class ParserDefinition : public ASTNode {
 public:
-    std::vector<Section> sections;
-    ParserDefinition(std::vector<Section> sections, Position start, Position end)
+    virtual std::string class_name() { return "ParserDefinition"; }
+    std::vector<std::shared_ptr<Section>> sections;
+    ParserDefinition(std::vector<std::shared_ptr<Section>> sections, Position start, Position end)
         : sections(sections)
         , ASTNode(start, end)
     {}
+};
+
+class StatementGroup {
+public:
+    std::string class_name() { return "StatementGroup"; }
+    std::string name = "";
+    std::string return_type = "";
+    std::vector<std::shared_ptr<Statement>> statements;
+    StatementGroup(){}
+
 };
 
 }
