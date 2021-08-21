@@ -1,10 +1,12 @@
+#pragma once
 #include "parsergen/lexer.hpp"
 #include "parsergen/utils.hpp"
+#include <functional>
+#include <optional>
 #include <vector>
 #include <string>
 #include <memory>
 
-#pragma once
 
 #define POSITION start, end
 
@@ -38,9 +40,14 @@ public:
     Token &peek_token();
     Token &peek_token(int pos);
     Position current_pos();
+    void clear_memoization_caches();
 protected:
     std::shared_ptr<TokenStream> token_stream;
     int error_pos = -1;
 };
+
+inline std::string getTokenValueOr(std::optional<Token> &tok, std::string other){
+    return tok.has_value() ? tok->value : other;
+}
 
 }

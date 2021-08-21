@@ -1,6 +1,7 @@
 #include "fmt/core.h"
-#include "algorithm"
+#include <algorithm>
 #include "parsergen/parser_utils.hpp"
+#include <iostream>
 
 namespace Parsergen {
 
@@ -41,11 +42,13 @@ std::optional<ParseError> Parser::error(){
         return std::nullopt;
     auto tok = peek_token(error_pos);
     auto num_lines = token_stream->lexer->lines.size();
+    auto end = tok.position;
+    end.column += tok.value.length();
     return std::optional<ParseError>(
         ParseError(
             fmt::format("Unexpected token {}", tok.error_format()), 
-            tok.position, tok.position,
-            tok.position.lineno-1 < num_lines && num_lines > 0 ? token_stream->lexer->lines[tok.position.lineno-1] : ""
+            tok.position, end,
+            tok.position.lineno - 1 < num_lines && num_lines > 0 ? token_stream->lexer->lines[tok.position.lineno - 1] : ""
         )
     );
 }

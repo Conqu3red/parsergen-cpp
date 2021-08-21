@@ -141,6 +141,10 @@ public:
 
 };
 
+std::shared_ptr<Expr> something(){
+    return std::make_shared<TokenPointer>("abc", Position(), Position());
+}
+
 int main(){
     TestLexer l;
     std::string input = "text abc text def";
@@ -160,6 +164,28 @@ int main(){
         for (auto &child : top.value()->children){
             std::cout << child->class_name() << "\n";
         }
+    }
+
+    auto x = std::make_optional<std::optional<int>>(std::nullopt);
+    x.value() = std::nullopt;
+    // x definitely has a value
+    std::cout << "x has value? " << x.has_value() << "\n";
+    auto p0 = x.value();
+    std::cout << "p0 has value? " << p0.has_value() << "\n";
+
+    std::shared_ptr<Token> t(new Token("x", "y", Position()));
+    std::shared_ptr<Token> t2(t);
+    //auto x1 = std::shared_ptr(new Token("x", "y", Position())); // invalid
+
+    std::shared_ptr<TextNode> tn(new TextNode("abc", Position(), Position()));
+    std::shared_ptr<Expr> e(tn);
+    std::cout << e->class_name() << "\n";
+
+    std::vector<std::shared_ptr<Expr>> exprs;
+    std::cout << something()->class_name();
+    //exprs.push_back(std::make_shared<Expr>(std::make_shared<TokenPointer>("abc", Position(), Position())));
+    for (auto &p : exprs){
+        std::cout << p->class_name();
     }
 
     return 0;

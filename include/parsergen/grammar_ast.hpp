@@ -192,18 +192,32 @@ public:
     using ASTNode::ASTNode;
 };
 
-class Statement : public Section {
+class Statement : public ASTNode {
 public:
     virtual std::string class_name() { return "Statement"; }
-    std::string name;
     std::string return_type;
     std::vector<std::shared_ptr<Expr>> exprs;
     std::string action;
-    Statement(std::string name, std::string return_type, std::vector<std::shared_ptr<Expr>> exprs, std::string action, Position start, Position end)
-        : name(name)
-        , return_type(return_type)
+    Statement(std::string return_type, std::vector<std::shared_ptr<Expr>> exprs, std::string action, Position start, Position end)
+        : return_type(return_type)
         , exprs(exprs)
         , action(action)
+        , ASTNode(start, end)
+    {}
+
+};
+
+class StatementGroup : public Section {
+public:
+    std::string class_name() { return "StatementGroup"; }
+    std::string name = "";
+    std::string return_type = "";
+    std::vector<std::shared_ptr<Statement>> statements;
+    StatementGroup() : Section(Position(), Position()) {}
+    StatementGroup(std::string name, std::string return_type, std::vector<std::shared_ptr<Statement>> statements, Position start, Position end)
+        : name(name)
+        , return_type(return_type)
+        , statements(statements)
         , Section(start, end)
     {}
 
@@ -229,16 +243,6 @@ public:
         : sections(sections)
         , ASTNode(start, end)
     {}
-};
-
-class StatementGroup {
-public:
-    std::string class_name() { return "StatementGroup"; }
-    std::string name = "";
-    std::string return_type = "";
-    std::vector<std::shared_ptr<Statement>> statements;
-    StatementGroup(){}
-
 };
 
 }

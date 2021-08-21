@@ -14,6 +14,7 @@
 #include <fmt/format.h>
 #include <sstream>
 #include <algorithm>
+#include <set>
 #include "tsl/ordered_map.h"
 
 #pragma once
@@ -57,6 +58,8 @@ public:
     std::map<std::string, std::string> config;
     tsl::ordered_map<std::string, StatementGroup> rules;
     std::shared_ptr<ParserDefinition> parser_definition;
+    tsl::ordered_map<std::string, std::set<std::string>> node_map;
+    std::vector<std::string> memoization_caches;
     
     Generator(std::shared_ptr<ParserDefinition> parser_definition)
         : parser_definition(parser_definition)
@@ -68,6 +71,7 @@ public:
             {"class_name", "CustomParser"},
             {"inherits_from", "Parser"},
             {"header", ""},
+            {"footer", ""},
         };
 
     }
@@ -80,11 +84,68 @@ public:
         _indent -= 1;
     }
 
-    auto process_sections(){
-        std::list<std::shared_ptr<Statement>> statement_list;
+    auto construct_mapping_graph(){
+        for (auto &[name, stmt_group] : rules){
+            for (auto &stmt : stmt_group.statements){
+                utils::set_union(node_map[name], map_node(stmt));
+            }
+        }
+    }
+
+    std::set<std::string> map_node(std::shared_ptr<ASTNode> node){
+        std::set<std::string> result;
+        if (node->is("Statement")){
+            for (auto &part : std::dynamic_pointer_cast<Statement>(node)->exprs)
+                utils::set_union(result, map_node(part));
+        }
+        if (node->is("ExprList")){
+            for (auto &part : std::dynamic_pointer_cast<ExprList>(node)->exprs)
+                utils::set_union(result, map_node(part));
+        }
+        if (node->is("ZeroOrMore") || node->is("OneOrMore") || node->is("ZeroOrOne"))
+            utils::set_union(result, map_node(std::dynamic_pointer_cast<Quanitifier>(node)->expr));
+        if (node->is("NamedItem"))
+            utils::set_union(result, map_node(std::dynamic_pointer_cast<NamedItem>(node)->expr));
+        if (node->is("StatementPointer"))
+            result.insert(std::dynamic_pointer_cast<StatementPointer>(node)->target);
+        return result;
+    }
+
+    bool is_left_recursive(std::string name){
+        auto locations = node_located_in(name);
+        while (true){
+            std::set<std::string> prev = {};
+            utils::set_union(prev, locations);
+            for (auto &loc : locations){
+                utils::set_union(locations, node_located_in(loc));
+            }
+            for (auto &loc : node_map[name]){
+                if (locations.count(loc))
+                    return true;
+            }
+            if (locations == prev) break;
+        }
+        return false;
+    }
+
+    std::set<std::string> node_located_in(std::string name){
+        std::set<std::string> located_in;
+        for (auto &[k, data] : node_map){
+            if (data.count(name))
+                located_in.insert(k);
+        }
+        return located_in;
+    }
+
+    // TODO: implement is_left_recursive(std::string name)
+    // store statement_mapping_graph somewhere in the class so we don't recalculate on each call to is_left_rec...
+
+
+    void process_sections(){
+        std::list<std::shared_ptr<StatementGroup>> statement_group_list;
         for (auto &section : parser_definition->sections){
-            if (section->is("Statement")){
-                statement_list.push_back(std::dynamic_pointer_cast<Statement>(section));
+            if (section->is("StatementGroup")){
+                statement_group_list.push_back(std::dynamic_pointer_cast<StatementGroup>(section));
             }
             else { // ConfigurationCall
                 auto config_call = std::dynamic_pointer_cast<ConfigurationCall>(section);
@@ -92,56 +153,111 @@ public:
             }
         }
 
-        return post_process(statement_list);
+        post_process(statement_group_list);
     }
 
     void generate(){
         process_sections();
+        construct_mapping_graph();
         emit << _header_;
         emit << config["header"];
         generate_parser_class();
+        emit << config["footer"];
     }
 
-    void post_process(std::list<std::shared_ptr<Statement>> rules_list){
-        std::string current_name = "<>";
-        std::string current_return_type = "<>";
-        for (auto &r : rules_list){
-            if (r->name == "<>")
-                r->name = current_name;
-            if (r->return_type == "<>")
-                r->return_type = current_return_type;
-            
-            current_name = r->name;
-            current_return_type = r->return_type;
-            
-            if (!rules.contains(r->name)){
-                rules[r->name] = StatementGroup();
+    void generate_clear_memoization_cache_function(){
+        emit << "void clear_memoization_cache(){";
+        indent();
+            for (auto &entry : memoization_caches){
+                emit << fmt::format("{}.clear();", entry);
             }
-            rules[r->name].statements.push_back(r);
-            rules[r->name].return_type = r->return_type;
-            rules[r->name].name = current_name;
-                
+        unindent();
+        emit << "}";
+    }
+
+    void post_process(std::list<std::shared_ptr<StatementGroup>> rules_list){
+        for (auto &r : rules_list){
+            for (auto &stmt : r->statements)
+                if (stmt->return_type == "<>")
+                    stmt->return_type = r->return_type;
+            
+            rules[r->name] = *r;
         }
     }
 
     void generate_parser_class(){
         emit << fmt::format("class {} : public {} {{", config["class_name"], config["inherits_from"]);
+        emit << "public:";
         indent();
         emit << fmt::format("using {0}::{0};", config["inherits_from"]);
         for (auto &[name, stmt_group] : rules){
             std::cout << name << "\n";
-            generate_stmt_group (stmt_group);
+            generate_stmt_group(stmt_group);
             std::cout << "done\n";
         }
+        generate_clear_memoization_cache_function();
         unindent();
         emit << "};";
+    }
+
+    void create_left_recursion_memoization(std::string return_type, std::string cache_name, std::string function_name){
+        memoization_caches.push_back(cache_name);
+        emit << fmt::format("std::map<int, std::tuple<{}, int>> {};", return_type, cache_name);
+        emit << fmt::format("{} {}(){{", return_type, function_name);
+        indent();
+            emit << "auto pos = mark();";
+            emit << fmt::format("auto memoized = {}.find(pos);", cache_name);
+            emit << fmt::format("{} res;", return_type);
+            emit << "int endpos;";
+            emit << fmt::format("if (memoized != {}.end()) {{", cache_name);
+            indent();
+                emit << "res = std::get<0>(memoized->second);";
+                emit << "endpos = std::get<1>(memoized->second);";
+                emit << "set_pos(endpos);";
+            unindent();
+            emit << "}";
+            emit << "else {";
+            indent();
+                // prime the cache with a failure.
+                emit << fmt::format("{} lastres = std::nullopt;", return_type);
+                emit << "auto lastpos = pos;";
+                emit << fmt::format("{}[pos] = std::make_tuple(lastres, lastpos);", cache_name);
+                // Loop until no longer parse is obtained.
+                emit << "while (true) {";
+                indent();
+                    emit << "set_pos(pos);";
+                    emit << fmt::format("res = _{}();", function_name);
+                    emit << "endpos = mark();";
+                    emit << "if (endpos <= lastpos) break;";
+                    emit << "lastres = res;";
+                    emit << "lastpos = endpos;";
+                    emit << fmt::format("{}[pos] = std::make_tuple(res, endpos);", cache_name);
+                unindent();
+                emit << "}";
+                emit << "res = lastres;";
+                emit << "set_pos(lastpos);";
+            unindent();
+            emit << "}";
+            emit << "return res;";
+        unindent();
+        emit << "}";
     }
 
     void generate_stmt_group(StatementGroup stmt_group){
         for (auto &stmt : stmt_group.statements){
             pre_process(stmt->exprs);
         }
-        emit << fmt::format("std::optional<std::shared_ptr<{}>> {}(){{", stmt_group.statements.front()->return_type, stmt_group.statements.front()->name);
+        auto function_return_type = fmt::format("std::optional<{}>", stmt_group.return_type);
+        
+        if (is_left_recursive(stmt_group.name)){
+            auto cache_name = fmt::format("__{}__memoization_cache", stmt_group.name);
+            create_left_recursion_memoization(function_return_type, cache_name, stmt_group.name);
+            
+            emit << fmt::format("{} _{}(){{", function_return_type, stmt_group.name);
+        }
+        else
+            emit << fmt::format("{} {}(){{", function_return_type, stmt_group.name);
+        
         indent();
             emit << "Position start, end;";
             emit << "int pos = mark();";
@@ -188,7 +304,7 @@ public:
             for (auto &[part_num, name] : named_items){
                 emit << fmt::format("auto &{} = _p{:d}.value();", name, part_num);
             }
-            emit << fmt::format("return std::make_shared<{}>({});", stmt->return_type, stmt->action);
+            emit << fmt::format("return {};", stmt->action);
         unindent();
         emit << "}"; // end scope
         unindent();
@@ -290,20 +406,19 @@ public:
 
     std::string get_return_type(std::shared_ptr<Expr> expr){
         if (expr->is("StatementPointer")){
-            return fmt::format("std::shared_ptr<{}>", rules[std::dynamic_pointer_cast<StatementPointer>(expr)->target].return_type);
+            return rules[std::dynamic_pointer_cast<StatementPointer>(expr)->target].return_type;
         }
         std::string fname = get_function_name(expr);
         if (fname == "")
             return "";
         if (expr->is("TokenPointer") || expr->is("ConstantString"))
-            return fmt::format("decltype(std::declval<{}>().{}()", config["class_name"], fname);
+            return "Token"; // should maybe be std::optional<Token>
         return fmt::format("decltype(std::declval<{}>().{}().value_or(NULL))", config["class_name"], fname);
     }
 
     void pre_process(std::vector<std::shared_ptr<Expr>> &exprs){
         for (auto &expr : exprs){
-            resolve(expr, counter);
-            counter++;
+            pre_process(expr);
         }
     }
 
@@ -318,6 +433,7 @@ public:
         else if (expr->is("OneOrMore")) resolve(std::dynamic_pointer_cast<OneOrMore>(expr), c);
         else if (expr->is("ZeroOrOne")) resolve(std::dynamic_pointer_cast<ZeroOrOne>(expr), c);
         else if (expr->is("ExprList")) resolve(std::dynamic_pointer_cast<ExprList>(expr), c);
+        else if (expr->is("NamedItem")) resolve(std::dynamic_pointer_cast<NamedItem>(expr)->expr, c);
         //else
         //    throw std::runtime_error(fmt::format("Invalid type '{}'", expr->class_name()));
     }
@@ -394,9 +510,10 @@ public:
         item->handle_name = fmt::format("_maybe_{:d}", c);
         emit << fmt::format("std::optional< std::optional<{}> > {}(){{", return_type, item->handle_name);
         indent();
-            //emit << fmt::format("std::optional<std::shared_ptr<{}>> value;", return_type);
+            //emit << fmt::format("std::optional<{}> value;", return_type);
             emit << "int pos = mark();";
             emit << fmt::format("auto rv = std::make_optional<std::optional<{}>>(std::nullopt);", return_type);
+            emit << "rv.value() = std::nullopt;";
             int _p = 0;
             gen(item->expr, _p);
             emit << fmt::format("if (!_p0.has_value()){{");
@@ -406,7 +523,7 @@ public:
             unindent();
             emit << "}";
             emit << "auto &p0 = _p0.value();";
-            emit << "rv.value().value() = p0;";
+            emit << "rv.value() = _p0;";
             emit << "return rv;";
         unindent();
         emit << "}";
@@ -422,7 +539,7 @@ public:
         }
         if (utils::endsWith(tuple_types, ", "))
             tuple_types.erase(tuple_types.end()-2, tuple_types.end());
-        std::string return_type = "std::optional<std::shared_ptr<std::tuple<" + tuple_types + ">>>";
+        std::string return_type = "std::optional<std::tuple<" + tuple_types + ">>";
         item->handle_name = fmt::format("_expr_list_{:d}", c);
         emit << fmt::format("{} {}(){{", return_type, item->handle_name);
         indent();

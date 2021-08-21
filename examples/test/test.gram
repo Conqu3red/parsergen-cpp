@@ -1,0 +1,29 @@
+@header = '
+#include <math.h>
+#include "examples/test/test_lexer.hpp"
+'
+@class_name = 'TestParser'
+
+start[int]
+    :  e=expr EOF  { e };
+
+expr[int]
+    :  left=expr ADD right=term   { left + right };
+    :  left=expr SUB right=term   { left - right };
+    :  e=term { e };
+
+term[int]
+    :  left=term MUL right=factor { left * right };
+    :  left=term DIV right=factor { left / right };
+    :  e=factor { e };
+
+factor[int]
+    :  left=item POW right=factor { pow(left, right) };
+    :  e=item { e };
+
+item[int]
+    :  n=INT { std::stoi(n.value) };
+    :  LPAREN e=expr RPAREN { e };
+
+test[int]
+    : item? { 1 };

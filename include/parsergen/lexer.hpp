@@ -79,7 +79,7 @@ struct LexError : std::runtime_error {
         const std::string &lineText
     );
 
-    const char *what() const throw();
+    const char *what() const noexcept;
 private:
     std::string message;
     void make_message();
@@ -102,7 +102,7 @@ protected:
     std::string_view source;
     constexpr bool source_left() { return source.length() > 0; }
     int column = 0;
-    int lineno = 0;
+    int lineno = 1;
     void newline();
     Token GetNextToken();
     void StepSource(int amount);
@@ -120,7 +120,7 @@ public:
 
 private:
     int m_pos = 0;
-    Token eof_tok { Token("EOF", "<EOF>", Position(0, 0)) };
+    Token eof_tok { Token("EOF", "", Position(0, 0)) };
 };
 
 }

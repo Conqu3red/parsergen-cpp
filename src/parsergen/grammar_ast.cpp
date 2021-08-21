@@ -18,12 +18,10 @@ namespace Parsergen {
             S_RULE("NOT", "\\!"),
             S_RULE("AND", "\\&"),
             S_RULE("AT", "\\@"),
-            F_RULE("ACTION", "\\{([\\s\\S]+?)\\}\\s*(;\\s*(\n|$))",
+            F_RULE("ACTION", "\\{([\\s\\S]+?)\\}\\s*(?=;\\s*(\n|$))",
                 [this] (Token &tok, utils::svmatch &sm) {
                     //fmt::print("ACTION MATCHED: \n\n BEGIN:\n {}\nEND\n", sm.str());
-                    // step back to the terminating semicolon
-                    column -= sm.length(2);
-                    currentLine = currentLine.substr(0, currentLine.length() - sm.length(2));
+                    
                     tok.value = sm.str(1);
                     utils::trim(tok.value);
 
@@ -31,7 +29,7 @@ namespace Parsergen {
             ),
             F_RULE("STRING", "'", 
                 [this] (Token &tok, utils::svmatch &sm) {
-                    char end = tok.value[0];
+                    char end = '\'';
                     bool escape = false;
                     std::string result = "";
 
@@ -46,11 +44,13 @@ namespace Parsergen {
                                     StepSource(1);
                                     escape = true;
                                 }
-                                if (cur == end){
+                                else if (cur == end){
                                     tok.value = result;
                                     return;
                                 }
                             }
+                            if (cur == '\n')
+                                newline();
                             result += cur;
                             escape = false;
                         }
@@ -59,9 +59,15 @@ namespace Parsergen {
 
                 }
             ),
+            F_RULE("RETURN_TYPE", "\\[([a-zA-Z0-9_:<>]+)\\]",
+                [this] (Token &tok, utils::svmatch &sm) {
+                    tok.value = sm.str(1);
+                }
+            ),
             F_RULE("NEWLINE", "\n",
                 [this] (Token &tok, utils::svmatch &sm) {
                     newline();
+                    throw NoToken();
                 }
             ),
             F_RULE("ignore", "[ \t]+",

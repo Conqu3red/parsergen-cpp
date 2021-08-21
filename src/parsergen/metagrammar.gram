@@ -1,39 +1,63 @@
 @header = '
-from .grammar_utils import *
+#include "parsergen/grammar_ast.hpp"
+using namespace Parsergen::AST;
 
+namespace Parsergen {
 '
+
+@footer = '
+}'
+
 @class_name = 'GrammarParser'
 
-parser_definition  : s=section* EOF { ParserDefinition(s) }; 
+parser_definition[std::shared_ptr<ParserDefinition>]
+    :  s=section* { std::make_shared<ParserDefinition>(s, POSITION) };
 
-section
-    :  s=statement { s };
+section[std::shared_ptr<Section>]
+    :  s=statement_group { s };
     :  s=configuration { s };
 
-configuration  :  AT name=ID EQ value=STRING { ConfigurationCall(name.value, value.value) };
-statement  :  n=(ID? COLON)? es=expr* a=ACTION? TERMINATE { Statement(
-    n[0].value if not isinstance(n, Filler) and not isinstance(n[0], Filler) else "<>", 
-    es, 
-    action=a.value if not isinstance(a, Filler) else None
-) };
+configuration[std::shared_ptr<ConfigurationCall>]
+    :  AT name=ID EQ value=STRING { std::make_shared<ConfigurationCall>(name.value, value.value, POSITION) };
 
-expr_list  :  es=expr* { ExprList(es) };
-expr  :  name=(ID EQ)? v=or_op { NamedItem(name[0].value, v) if not isinstance(name, Filler) else v };
-or_op  :  v=star_op others=(OR star_op)* { OrOp(exprs=[v]+[o[1] for o in others]) if len(others) > 0 else v };
-star_op  :  v=plus_op s=STAR? { ZeroOrMore(v) if not isinstance(s, Filler) else v };
-plus_op  :  v=qmark_op s=PLUS? { OneOrMore(v) if not isinstance(s, Filler) else v };
-qmark_op  :  v=term s=QMARK? { ZeroOrOne(v) if not isinstance(s, Filler) else v };
+statement_group[std::shared_ptr<StatementGroup>]
+    :  name=ID return_type=RETURN_TYPE stmts=statement* { std::make_shared<StatementGroup>(name.value, return_type.value, stmts, POSITION) };
 
-term
-    :  AND f=factor { AndPredicate(f) };
-    :  NOT f=factor { NotPredicate(f) };
+statement[std::shared_ptr<Statement>]
+    :  return_type=RETURN_TYPE? COLON es=expr* a=ACTION? TERMINATE { std::make_shared<Statement>(getTokenValueOr(return_type, "<>"), es, getTokenValueOr(a, "<>"), POSITION) };
+
+expr_list[std::shared_ptr<ExprList>]
+    :  es=expr* { std::make_shared<ExprList>(es, POSITION) };
+
+expr[std::shared_ptr<Expr>]
+  [std::shared_ptr<NamedItem>]  :  name=ID EQ v=or_op { std::make_shared<NamedItem>(name.value, v, POSITION) };
+    :  v=or_op { v };
+
+or_op[std::shared_ptr<Expr>]
+    :  star_op { p1 };
+
+star_op[std::shared_ptr<Expr>]
+  [std::shared_ptr<ZeroOrMore>]  :  v=plus_op STAR { std::make_shared<ZeroOrMore>(v, POSITION) };
+    :  v=plus_op { v };
+
+plus_op[std::shared_ptr<Expr>]
+  [std::shared_ptr<OneOrMore>]  :  v=qmark_op PLUS { std::make_shared<OneOrMore>(v, POSITION) };
+    :  v=qmark_op { v };
+
+qmark_op[std::shared_ptr<Expr>]
+  [std::shared_ptr<ZeroOrOne>]  :  v=term QMARK { std::make_shared<ZeroOrOne>(v, POSITION) };
+    :  v=term { v };
+
+term[std::shared_ptr<Expr>]
+  [std::shared_ptr<AndPredicate>]  :  AND f=factor { std::make_shared<AndPredicate>(f, POSITION) };
+  [std::shared_ptr<NotPredicate>]  :  NOT f=factor { std::make_shared<NotPredicate>(f, POSITION) };
     :  f=factor { f };
 
-factor
+factor[std::shared_ptr<Expr>]
     :  i=item { i };
     :  LPAREN es=expr_list RPAREN { es };
 
-item
-    :  i=ID { StatementPointer(i.value) };
-    :  i=TOKEN { TokenPointer(i.value) };
-    :  i=STRING { ConstantString(i.value) };
+item[std::shared_ptr<Expr>]
+  [std::shared_ptr<StatementPointer>]  :  i=ID { std::make_shared<StatementPointer>(i.value, POSITION) };
+  [std::shared_ptr<TokenPointer>]  :  i=TOKEN { std::make_shared<TokenPointer>(i.value, POSITION) };
+  [std::shared_ptr<ConstantString>]  :  i=STRING { std::make_shared<ConstantString>(i.value, POSITION) };

@@ -67,7 +67,7 @@ Lexer::Lexer(){
 }
 
 void Lexer::setText(std::string text){
-    this->text = text;
+    this->text = utils::normalizeNewlines(text);
     this->source = std::string_view(this->text);
     this->currentLine = std::string_view(this->source.data(), 0);
 }
@@ -99,7 +99,7 @@ Token Lexer::GetNextToken(){
             // The overload (3) is prohibited from accepting temporary strings,
             // otherwise this function populates match_results m with string 
             // iterators that become invalid immediately.
-            bool matches = utils::regex_search(source.data(), sm, pattern);
+            bool matches = utils::regex_search(source, sm, pattern);
             if (matches){
                 if (sm.position() == 0){
                     // match found
@@ -116,6 +116,7 @@ Token Lexer::GetNextToken(){
             }
         }
     }
+    std::cout << (int)(source[0]) << "\n";
     throw LexError(
         fmt::format("Found Unexpected character '{}' while tokenizing!", source[0]),
         lineno,

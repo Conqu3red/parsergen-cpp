@@ -5,6 +5,8 @@
 #include <regex>
 #include <string>
 #include <functional>
+#include <memory>
+#include <set>
 
 #pragma once
 
@@ -108,6 +110,18 @@ static bool endsWith(const std::string& str, const std::string& suffix)
 static bool startsWith(const std::string& str, const std::string& prefix)
 {
     return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
+}
+
+static std::string normalizeNewlines(std::string string){
+    string = ReplaceAll(string, "\r\n", "\n"); // windows -> unix
+    string = ReplaceAll(string, "\r", "\n"); // mac -> unix
+    return string;
+}
+
+template <typename T>
+void set_union(std::set<T>& a, std::set<T> b)
+{
+  a.insert(b.begin(), b.end());
 }
 
 }
