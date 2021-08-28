@@ -1,22 +1,45 @@
 # Jalcore1 Emulator makefile.
-CC=g++
-BFLAGS= -std=c++17# -fsanitize=address -static-libasan -g
-CFLAGS= -Iinclude
+CXX := g++
+CXXFLAGS := -std=c++17 -O3
+INCLUDES := -Iinclude
 
-TARGET= 
-PARSERGEN_SRC=src/parsergen/*.cpp
-FMT_SRC=src/format.cc
+SRC_DIR := ./src/parsergen
+OBJ_DIR := ./build/obj
+BIN_DIR := ./bin
+
+SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
+OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
+FMT_OBJ := $(OBJ_DIR)/format.o
+
 
 .DEFAULT_GOAL := example
 
-example: $(SRC)
-	$(CC) $(BFLAGS) examples/test/main.cpp -I. -o example.exe $(SRC) $(PARSERGEN_SRC) $(FMT_SRC) $(CFLAGS)
+libparsergen: $(OBJ_FILES) lib_fmt
+	ar rcs bin/libparsergen.a $(OBJ_FILES) $(FMT_OBJ)
 
-bootstrap: $(SRC)
-	$(CC) $(BFLAGS) examples/bootstrap_parser.cpp $(SRC) $(PARSERGEN_SRC) $(FMT_SRC) $(CFLAGS)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(INCLUDES) $(CXXFLAGS) -c $< -o $@
 
-metagrammar: $(SRC)
-	$(CC) $(BFLAGS) examples/regen_parser.cpp $(SRC) $(PARSERGEN_SRC) $(FMT_SRC) $(CFLAGS)
+lib_fmt:
+	$(CXX) $(INCLUDES) $(CXXFLAGS) -c src/format.cc -o $(OBJ_DIR)/format.o
 
-test_parser: $(SRC)
-	$(CC) $(BFLAGS) examples/test_parser.cpp $(SRC) $(PARSERGEN_SRC) $(FMT_SRC) $(CFLAGS)
+
+example: libparsergen
+	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/test/main.cpp -Lbin -lparsergen -I. -o $(BIN_DIR)/$@.exe
+
+bootstrap: libparsergen
+	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/bootstrap_parser.cpp -Lbin -lparsergen -I. -o $(BIN_DIR)/$@.exe
+
+metagrammar: libparsergen
+	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/regen_parser.cpp -Lbin -lparsergen -I. -o $(BIN_DIR)/$@.exe
+
+test_parser: libparsergen
+	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/test_parser.cpp -Lbin -lparsergen -I. -o $(BIN_DIR)/$@.exe
+
+
+# JSON parser tests
+json_parser: libparsergen
+	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/json/generate_parser.cpp -Lbin -lparsergen -I. -o $(BIN_DIR)/$@.exe
+
+json_main: libparsergen
+	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/json/main.cpp -Lbin -lparsergen -I. -o $(BIN_DIR)/$@.exe

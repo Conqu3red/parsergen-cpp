@@ -1,7 +1,9 @@
+#pragma once
 #include "parsergen/lexer.hpp"
 #include "parsergen/grammar_ast.hpp"
 #include "parsergen/utils.hpp"
 #include "parsergen/parser_utils.hpp"
+#include "parsergen/grammar_parser.hpp"
 
 #include <assert.h>
 #include <list>
@@ -17,7 +19,6 @@
 #include <set>
 #include "tsl/ordered_map.h"
 
-#pragma once
 
 
 using namespace Parsergen::AST;
@@ -112,6 +113,8 @@ public:
     }
 
     bool is_left_recursive(std::string name){
+        if (config["disable_left_recursion"] != "")
+            return false;
         auto locations = node_located_in(name);
         while (true){
             std::set<std::string> prev = {};
@@ -577,7 +580,7 @@ public:
             emit << "// match:";
             if (utils::endsWith(result_return, ", "))
                 result_return.erase(result_return.end()-2, result_return.end());
-            emit << fmt::format("return std::make_shared<std::tuple<{}>>(std::make_tuple({}));", tuple_types, result_return);
+            emit << fmt::format("return std::make_tuple({});", result_return);
             unindent();
             emit << "}"; // end for loop
             emit << "set_pos(pos);";
@@ -606,5 +609,24 @@ const std::string Generator::_header_ = R"(
 using namespace Parsergen;
 
 )";
+
+std::string generate_parser(std::string grammar){
+    GrammarLexer l;
+    l.setText(grammar);
+    l.Lex();
+    GrammarParser parser(std::make_shared<TokenStream>(std::make_shared<GrammarLexer>(l)));
+    auto p = parser.parser_definition();
+    if (p.has_value()){
+        Generator g(p.value());
+        g.generate();
+        return g.result.str();
+    }
+    else {
+        auto e = parser.error();
+        if (e.has_value())
+            throw e.value();
+        throw ParseError("Parse Error", Position(), Position(), "");
+    }
+}
 
 }

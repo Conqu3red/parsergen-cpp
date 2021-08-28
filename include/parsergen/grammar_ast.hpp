@@ -1,28 +1,10 @@
+#pragma once
 #include <string>
 #include <list>
 #include <vector>
 #include <memory>
+#include <initializer_list>
 #include <parsergen/lexer.hpp>
-#pragma once
-
-#define S_RULE(name, pattern) (\
-    LexRule(\
-        name,\
-        std::vector<std::regex>{\
-            std::regex(pattern, REGEX_SYNTAX_TYPE)\
-        }\
-    )\
-)
-
-#define F_RULE(name, pattern, func) (\
-    LexRule(\
-        name,\
-        std::vector<std::regex>{\
-            std::regex(pattern, REGEX_SYNTAX_TYPE)\
-        },\
-        func\
-    )\
-)
 
 namespace Parsergen {
 

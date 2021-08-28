@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include <string_view>
 #include <vector>
@@ -10,14 +11,11 @@
 #include "fmt/core.h"
 #include "parsergen/utils.hpp"
 
-#pragma once
-
-#define REGEX_SYNTAX_TYPE std::regex_constants::ECMAScript
+const auto REGEX_SYNTAX_TYPE = (std::regex_constants::ECMAScript | std::regex_constants::optimize);
 
 namespace Parsergen {
 
-class Position {
-public:
+struct Position {
     int lineno { 0 };
     int column { 0 };
     Position(){}
@@ -32,9 +30,10 @@ class Token {
 public:
     std::string type;
     std::string value;
-    Position position;
+    Position start;
+    Position end;
 
-    Token(std::string type, std::string value, Position position);
+    Token(std::string type, std::string value, Position start, Position end);
     std::string error_format();
 
     bool operator ==(Token &other) const;
@@ -43,12 +42,15 @@ public:
 class Lexer;
 
 typedef std::function<void (Token &tok, utils::svmatch &sm)> TokenModifierFunc;
+typedef std::function<void (Token &tok)> TokenFastModifierFunc;
 
 class LexRule {
 public:
     std::string name;
     std::vector<std::regex> patterns;
+    std::vector<std::string> string_patterns;
     TokenModifierFunc modifier;
+    TokenFastModifierFunc fast_modifier;
 
     LexRule(
         std::string name,
@@ -60,7 +62,30 @@ public:
         std::vector<std::regex> patterns,
         TokenModifierFunc modifier
     );
+
+    LexRule(
+        std::string name,
+        std::vector<std::string> patterns
+    );
+
+    LexRule(
+        std::string name,
+        std::vector<std::string> patterns,
+        TokenFastModifierFunc fast_modifier
+    );
 };
+
+
+LexRule token_match(std::string name, std::initializer_list<std::string> patterns);
+LexRule token_match(std::string name, std::initializer_list<std::string> patterns, TokenModifierFunc modifier);
+LexRule token_match(std::string name, std::string pattern);
+LexRule token_match(std::string name, std::string pattern, TokenModifierFunc modifier);
+
+LexRule token_match_fast(std::string name, std::initializer_list<std::string> patterns);
+LexRule token_match_fast(std::string name, std::initializer_list<std::string> patterns, TokenFastModifierFunc modifier);
+LexRule token_match_fast(std::string name, std::string pattern);
+LexRule token_match_fast(std::string name, std::string pattern, TokenFastModifierFunc modifier);
+
 
 struct NoToken : std::exception {
     const char *what() const throw() {
@@ -97,6 +122,7 @@ public:
     void setText(std::string text);
     std::string getText();
     void Lex();
+    Position cur_pos();
 protected:
     std::string text;
     std::string_view source;
@@ -110,17 +136,18 @@ protected:
 
 class TokenStream {
 public:
-    std::shared_ptr<Lexer> lexer;
     TokenStream(std::shared_ptr<Lexer> lexer) : lexer(lexer) {}
     int mark();
     void set_pos(int pos);
     Token &get_token();
     Token &peek_token();
     Token &peek_token(int pos);
+    std::shared_ptr<Lexer> GetLexer();
 
 private:
+    std::shared_ptr<Lexer> lexer;
     int m_pos = 0;
-    Token eof_tok { Token("EOF", "", Position(0, 0)) };
+    Token eof_tok { Token("EOF", "", Position(0, 0), Position(0, 0)) };
 };
 
 }

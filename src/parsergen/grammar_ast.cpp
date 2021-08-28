@@ -4,21 +4,21 @@
 namespace Parsergen {
     GrammarLexer::GrammarLexer() : Lexer(){
         rules = {
-            S_RULE("ID", "[a-z0-9_]+"),
-            S_RULE("TOKEN", "[A-Z0-9_]+"),
-            S_RULE("COLON", "\\:"),
-            S_RULE("OR", "\\|"),
-            S_RULE("STAR", "\\*"),
-            S_RULE("PLUS", "\\+"),
-            S_RULE("QMARK", "\\?"),
-            S_RULE("LPAREN", "\\("),
-            S_RULE("RPAREN", "\\)"),
-            S_RULE("TERMINATE", "\\;"),
-            S_RULE("EQ", "\\="),
-            S_RULE("NOT", "\\!"),
-            S_RULE("AND", "\\&"),
-            S_RULE("AT", "\\@"),
-            F_RULE("ACTION", "\\{([\\s\\S]+?)\\}\\s*(?=;\\s*(\n|$))",
+            token_match_fast("COLON", ":"),
+            token_match_fast("OR", "|"),
+            token_match_fast("STAR", "*"),
+            token_match_fast("PLUS", "+"),
+            token_match_fast("QMARK", "?"),
+            token_match_fast("LPAREN", "("),
+            token_match_fast("RPAREN", ")"),
+            token_match_fast("TERMINATE", ";"),
+            token_match_fast("EQ", "="),
+            token_match_fast("NOT", "!"),
+            token_match_fast("AND", "&"),
+            token_match_fast("AT", "@"),
+            token_match("ID", "[a-z0-9_]+"),
+            token_match("TOKEN", "[A-Z0-9_]+"),
+            token_match("ACTION", "\\{([\\s\\S]+?)\\}\\s*(?=;\\s*(\n|$))",
                 [this] (Token &tok, utils::svmatch &sm) {
                     //fmt::print("ACTION MATCHED: \n\n BEGIN:\n {}\nEND\n", sm.str());
                     
@@ -27,8 +27,8 @@ namespace Parsergen {
 
                 }
             ),
-            F_RULE("STRING", "'", 
-                [this] (Token &tok, utils::svmatch &sm) {
+            token_match_fast("STRING", "'", 
+                [this] (Token &tok) {
                     char end = '\'';
                     bool escape = false;
                     std::string result = "";
@@ -59,18 +59,18 @@ namespace Parsergen {
 
                 }
             ),
-            F_RULE("RETURN_TYPE", "\\[([a-zA-Z0-9_:<>]+)\\]",
+            token_match("RETURN_TYPE", "\\[(.+?)\\]",
                 [this] (Token &tok, utils::svmatch &sm) {
                     tok.value = sm.str(1);
                 }
             ),
-            F_RULE("NEWLINE", "\n",
-                [this] (Token &tok, utils::svmatch &sm) {
+            token_match_fast("NEWLINE", "\n",
+                [this] (Token &tok) {
                     newline();
                     throw NoToken();
                 }
             ),
-            F_RULE("ignore", "[ \t]+",
+            token_match("ignore", "[ \t]+",
                 [this] (Token &tok, utils::svmatch &sm) {
                     throw NoToken();
                 }

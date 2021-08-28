@@ -1,0 +1,26 @@
+@class_name = 'JsonParser'
+@header = '
+#include "examples/json/json_lexer.hpp"
+#include "examples/json/json_nodes.hpp"
+'
+@disable_left_recursion = 'true'
+
+json[JSON::Value]
+    :  e=value { e };
+
+value[JSON::Value]
+    :  e=object { JSON::Value(e) };
+    :  e=array { JSON::Value(e) };
+    :  e=STRING { JSON::Value(e.value) };
+    :  e=NUMBER { JSON::Value(std::stod(e.value)) };
+    :  e=BOOL { JSON::Value(e.value == "true") };
+    :  e=NULL { JSON::Value() };
+
+object[std::shared_ptr<JSON::JsonObject>]
+    :  LCURLY members=(member (COMMA member)*)? RCURLY { construct_object(members) };
+
+member[std::pair<std::string, JSON::Value>]
+    :  key=STRING COLON value=value { std::make_pair(key.value, value) };
+
+array[std::shared_ptr<JSON::JsonArray>]
+    : LSQUARE values=(value (COMMA value)*)? RSQUARE { construct_array(values) };

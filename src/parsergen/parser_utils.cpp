@@ -41,14 +41,13 @@ std::optional<ParseError> Parser::error(){
     if (error_pos == -1)
         return std::nullopt;
     auto tok = peek_token(error_pos);
-    auto num_lines = token_stream->lexer->lines.size();
-    auto end = tok.position;
-    end.column += tok.value.length();
+    auto num_lines = token_stream->GetLexer()->lines.size();
+    //auto end = tok.end;
     return std::optional<ParseError>(
         ParseError(
             fmt::format("Unexpected token {}", tok.error_format()), 
-            tok.position, end,
-            tok.position.lineno - 1 < num_lines && num_lines > 0 ? token_stream->lexer->lines[tok.position.lineno - 1] : ""
+            tok.start, tok.end,
+            tok.start.lineno - 1 < num_lines && num_lines > 0 ? token_stream->GetLexer()->lines[tok.start.lineno - 1] : ""
         )
     );
 }
@@ -88,7 +87,7 @@ Token &Parser::peek_token(int pos){
 }
 
 Position Parser::current_pos(){
-    return peek_token().position;
+    return peek_token().start;
 }
 
 }

@@ -24,20 +24,20 @@ class TestLexer : public Lexer {
 public:
     TestLexer() : Lexer() {
         rules = {
-            S_RULE("INT",  "[0-9]+"),
-            S_RULE("ADD",  "\\+"),
-            S_RULE("SUB",  "\\-"),
-            S_RULE("POW",  "\\*\\*"),
-            S_RULE("MUL",  "\\*"),
-            S_RULE("DIV",  "\\/"),
-            S_RULE("LPAREN",  "\\("),
-            S_RULE("RPAREN",  "\\)"),
-            F_RULE("COMMENT", "#.*",
+            token_match("INT",  "[0-9]+"),
+            token_match_fast("ADD",  "+"),
+            token_match_fast("SUB",  "-"),
+            token_match_fast("POW",  "**"),
+            token_match_fast("MUL",  "*"),
+            token_match_fast("DIV",  "/"),
+            token_match_fast("LPAREN",  "("),
+            token_match_fast("RPAREN",  ")"),
+            token_match("COMMENT", "#.*",
                 [this] (Token &tok, utils::svmatch &sm) {
                     throw NoToken();
                 }
             ),
-            F_RULE("SPACE", "[ \t]",
+            token_match("SPACE", "[ \t]",
                 [this] (Token &tok, utils::svmatch &sm) {
                     throw NoToken();
                 }

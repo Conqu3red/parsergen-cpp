@@ -1,3 +1,4 @@
+#pragma once
 #include <algorithm> 
 #include <cctype>
 #include <locale>
@@ -8,7 +9,6 @@
 #include <memory>
 #include <set>
 
-#pragma once
 
 namespace Parsergen {
 namespace utils {
