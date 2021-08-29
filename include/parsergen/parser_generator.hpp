@@ -180,10 +180,6 @@ public:
 
     void post_process(std::list<std::shared_ptr<StatementGroup>> rules_list){
         for (auto &r : rules_list){
-            for (auto &stmt : r->statements)
-                if (stmt->return_type == "<>")
-                    stmt->return_type = r->return_type;
-            
             rules[r->name] = *r;
         }
     }

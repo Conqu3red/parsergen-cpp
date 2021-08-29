@@ -43,11 +43,7 @@ std::string parser_format_ParserDefinition(std::shared_ptr<ParserDefinition> ite
 std::string parser_format_StatementGroup(std::shared_ptr<StatementGroup> item){
     std::string rv = fmt::format("{}[{}]\n", item->name, item->return_type);
     for (auto &statement : item->statements){
-        if (statement->return_type == item->return_type || statement->return_type == "<>")
-            rv += "    :  " + parser_format(statement);
-        else
-            rv += "  [" + statement->return_type + "]  :  " + parser_format(statement);
-        rv += "\n";
+        rv += "    :  " + parser_format(statement) + "\n";
     }
     return rv;
 }

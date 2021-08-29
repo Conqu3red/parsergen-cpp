@@ -24,17 +24,19 @@ lib_fmt:
 	$(CXX) $(INCLUDES) $(CXXFLAGS) -c src/format.cc -o $(OBJ_DIR)/format.o
 
 
-example: libparsergen
-	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/test/main.cpp -Lbin -lparsergen -I. -o $(BIN_DIR)/$@.exe
-
+# meta
 bootstrap: libparsergen
 	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/bootstrap_parser.cpp -Lbin -lparsergen -I. -o $(BIN_DIR)/$@.exe
 
 metagrammar: libparsergen
 	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/regen_parser.cpp -Lbin -lparsergen -I. -o $(BIN_DIR)/$@.exe
 
+# Calculator
 test_parser: libparsergen
 	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/test_parser.cpp -Lbin -lparsergen -I. -o $(BIN_DIR)/$@.exe
+
+example: libparsergen
+	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/test/main.cpp -Lbin -lparsergen -I. -o $(BIN_DIR)/$@.exe
 
 
 # JSON parser tests

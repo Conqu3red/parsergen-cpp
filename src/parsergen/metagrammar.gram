@@ -9,6 +9,7 @@ namespace Parsergen {
 }'
 
 @class_name = 'GrammarParser'
+@disable_left_recursion = 'true'
 
 parser_definition[std::shared_ptr<ParserDefinition>]
     :  s=section* { std::make_shared<ParserDefinition>(s, POSITION) };
@@ -24,33 +25,33 @@ statement_group[std::shared_ptr<StatementGroup>]
     :  name=ID return_type=RETURN_TYPE stmts=statement* { std::make_shared<StatementGroup>(name.value, return_type.value, stmts, POSITION) };
 
 statement[std::shared_ptr<Statement>]
-    :  return_type=RETURN_TYPE? COLON es=expr* a=ACTION? TERMINATE { std::make_shared<Statement>(getTokenValueOr(return_type, "<>"), es, getTokenValueOr(a, "<>"), POSITION) };
+    :  COLON es=expr* a=ACTION? TERMINATE { std::make_shared<Statement>(es, getTokenValueOr(a, "<>"), POSITION) };
 
 expr_list[std::shared_ptr<ExprList>]
     :  es=expr* { std::make_shared<ExprList>(es, POSITION) };
 
 expr[std::shared_ptr<Expr>]
-  [std::shared_ptr<NamedItem>]  :  name=ID EQ v=or_op { std::make_shared<NamedItem>(name.value, v, POSITION) };
+    :  name=ID EQ v=or_op { std::make_shared<NamedItem>(name.value, v, POSITION) };
     :  v=or_op { v };
 
 or_op[std::shared_ptr<Expr>]
     :  star_op { p1 };
 
 star_op[std::shared_ptr<Expr>]
-  [std::shared_ptr<ZeroOrMore>]  :  v=plus_op STAR { std::make_shared<ZeroOrMore>(v, POSITION) };
+    :  v=plus_op STAR { std::make_shared<ZeroOrMore>(v, POSITION) };
     :  v=plus_op { v };
 
 plus_op[std::shared_ptr<Expr>]
-  [std::shared_ptr<OneOrMore>]  :  v=qmark_op PLUS { std::make_shared<OneOrMore>(v, POSITION) };
+    :  v=qmark_op PLUS { std::make_shared<OneOrMore>(v, POSITION) };
     :  v=qmark_op { v };
 
 qmark_op[std::shared_ptr<Expr>]
-  [std::shared_ptr<ZeroOrOne>]  :  v=term QMARK { std::make_shared<ZeroOrOne>(v, POSITION) };
+    :  v=term QMARK { std::make_shared<ZeroOrOne>(v, POSITION) };
     :  v=term { v };
 
 term[std::shared_ptr<Expr>]
-  [std::shared_ptr<AndPredicate>]  :  AND f=factor { std::make_shared<AndPredicate>(f, POSITION) };
-  [std::shared_ptr<NotPredicate>]  :  NOT f=factor { std::make_shared<NotPredicate>(f, POSITION) };
+    :  AND f=factor { std::make_shared<AndPredicate>(f, POSITION) };
+    :  NOT f=factor { std::make_shared<NotPredicate>(f, POSITION) };
     :  f=factor { f };
 
 factor[std::shared_ptr<Expr>]
@@ -58,6 +59,6 @@ factor[std::shared_ptr<Expr>]
     :  LPAREN es=expr_list RPAREN { es };
 
 item[std::shared_ptr<Expr>]
-  [std::shared_ptr<StatementPointer>]  :  i=ID { std::make_shared<StatementPointer>(i.value, POSITION) };
-  [std::shared_ptr<TokenPointer>]  :  i=TOKEN { std::make_shared<TokenPointer>(i.value, POSITION) };
-  [std::shared_ptr<ConstantString>]  :  i=STRING { std::make_shared<ConstantString>(i.value, POSITION) };
+    :  i=ID { std::make_shared<StatementPointer>(i.value, POSITION) };
+    :  i=TOKEN { std::make_shared<TokenPointer>(i.value, POSITION) };
+    :  i=STRING { std::make_shared<ConstantString>(i.value, POSITION) };

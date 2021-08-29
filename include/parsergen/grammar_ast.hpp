@@ -177,12 +177,10 @@ public:
 class Statement : public ASTNode {
 public:
     virtual std::string class_name() { return "Statement"; }
-    std::string return_type;
     std::vector<std::shared_ptr<Expr>> exprs;
     std::string action;
-    Statement(std::string return_type, std::vector<std::shared_ptr<Expr>> exprs, std::string action, Position start, Position end)
-        : return_type(return_type)
-        , exprs(exprs)
+    Statement(std::vector<std::shared_ptr<Expr>> exprs, std::string action, Position start, Position end)
+        : exprs(exprs)
         , action(action)
         , ASTNode(start, end)
     {}
