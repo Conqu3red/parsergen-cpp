@@ -20,9 +20,9 @@ using namespace Parsergen;
 #include "parsergen/grammar_ast.hpp"
 using namespace AST;
 
-class TestLexer : public Lexer {
+class CalcLexer : public Lexer {
 public:
-    TestLexer() : Lexer() {
+    CalcLexer() : Lexer() {
         rules = {
             token_match("INT",  "[0-9]+"),
             token_match_fast("ADD",  "+"),
@@ -44,22 +44,4 @@ public:
             ),
         };
     }
-};
-
-class TextNode : public Expr {
-public:
-    std::string class_name() override { return "TextNode - \'" + text + "\'"; }
-    std::string text;
-    TextNode(std::string text, Position start, Position end)
-        : Expr(start, end), text(text)
-    {}
-};
-
-class Top : public Expr {
-public:
-    std::string class_name() override { return "Top"; }
-    std::vector<std::shared_ptr<TextNode>> children;
-    Top(std::vector<std::shared_ptr<TextNode>> children, Position start, Position end)
-        : Expr(start, end), children(children)
-    {}
 };

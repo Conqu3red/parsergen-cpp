@@ -1,8 +1,7 @@
 @header = '
 #include <math.h>
-#include "examples/test/test_lexer.hpp"
 '
-@class_name = 'TestParser'
+@class_name = 'CalcParser'
 
 start[int]
     :  e=expr EOF  { e };

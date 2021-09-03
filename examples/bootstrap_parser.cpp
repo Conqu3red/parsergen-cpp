@@ -24,7 +24,7 @@ namespace Parsergen {
 std::string parser_footer = "\n}";
 
 int main(){
-    GrammarLexer l;
+    auto l = std::make_unique<GrammarLexer>();
     std::ifstream file;
     file.open("src/parsergen/metagrammar.gram");
     if (file.is_open()){
@@ -32,10 +32,10 @@ int main(){
         strStream << file.rdbuf(); //read the file
         std::string pgram = strStream.str(); //str holds the content of the file
         
-        l.setText(pgram);
-        l.Lex();
+        l->setText(pgram);
+        l->Lex();
         //std::cout << "Start string: " << l.getText() << std::endl;
-        for (auto const &tok : l.tokens){
+        for (auto const &tok : l->tokens){
             std::cout << "type : '" << tok.type << ", value: '" << tok.value << "'\n";
             //fmt::print("type: '{}', value: '{}'\n", tok.type, tok.value);
         }

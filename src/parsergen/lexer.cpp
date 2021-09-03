@@ -261,8 +261,8 @@ Token &TokenStream::peek_token(int pos){
     return tok;
 }
 
-std::shared_ptr<Lexer> TokenStream::GetLexer(){
-    return lexer;
+std::vector<std::string> &TokenStream::get_lines(){
+    return lexer->lines;
 }
 
 

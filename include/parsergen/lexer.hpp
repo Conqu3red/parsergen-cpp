@@ -136,16 +136,16 @@ protected:
 
 class TokenStream {
 public:
-    TokenStream(std::shared_ptr<Lexer> lexer) : lexer(lexer) {}
+    TokenStream(std::unique_ptr<Lexer> lexer) : lexer(std::move(lexer)) {}
     int mark();
     void set_pos(int pos);
     Token &get_token();
     Token &peek_token();
     Token &peek_token(int pos);
-    std::shared_ptr<Lexer> GetLexer();
+    std::vector<std::string> &get_lines();
 
 private:
-    std::shared_ptr<Lexer> lexer;
+    std::unique_ptr<Lexer> lexer;
     int m_pos = 0;
     Token eof_tok { Token("EOF", "", Position(0, 0), Position(0, 0)) };
 };

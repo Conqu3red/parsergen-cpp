@@ -1,20 +1,20 @@
-#include "examples/test/test_lexer.hpp"
-#include "examples/test/test.hpp"
+#include "examples/calc/calc_lexer.hpp"
+#include "examples/calc/calc.hpp"
 
 #include <iostream>
 #include <string>
 
 int main(){
     while (true){
-        TestLexer l;
+        std::unique_ptr<Lexer> l = std::make_unique<CalcLexer>();
         std::string input = "";
         std::cout << "> ";
         std::getline(std::cin, input);
         if (input == "exit") break;
         
-        l.setText(input);
+        l->setText(input);
         try {
-            l.Lex();
+            l->Lex();
         }
         catch (LexError &e){
             std::cout << e.what() << "\n";
@@ -24,8 +24,7 @@ int main(){
         //for (auto const& tok : l.tokens){
         //    fmt::print("type: '{}', value: '{}'\n", tok.type, tok.value);
         //}
-        auto stream = std::make_shared<TokenStream>(TokenStream(std::make_shared<TestLexer>(l)));
-        TestParser p(stream);
+        CalcParser p(std::make_unique<TokenStream>(std::move(l)));
         auto top = p.start();
         if (top.has_value()){
             std::cout << *top << "\n";

@@ -41,13 +41,13 @@ std::optional<ParseError> Parser::error(){
     if (error_pos == -1)
         return std::nullopt;
     auto tok = peek_token(error_pos);
-    auto num_lines = token_stream->GetLexer()->lines.size();
+    auto num_lines = token_stream->get_lines().size();
     //auto end = tok.end;
     return std::optional<ParseError>(
         ParseError(
             fmt::format("Unexpected token {}", tok.error_format()), 
             tok.start, tok.end,
-            tok.start.lineno - 1 < num_lines && num_lines > 0 ? token_stream->GetLexer()->lines[tok.start.lineno - 1] : ""
+            tok.start.lineno - 1 < num_lines && num_lines > 0 ? token_stream->get_lines()[tok.start.lineno - 1] : ""
         )
     );
 }

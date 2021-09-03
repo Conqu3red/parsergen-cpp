@@ -12,7 +12,7 @@ namespace Parsergen {
 @disable_left_recursion = 'true'
 
 parser_definition[std::shared_ptr<ParserDefinition>]
-    :  s=section* { std::make_shared<ParserDefinition>(s, POSITION) };
+    :  s=section* EOF { std::make_shared<ParserDefinition>(s, POSITION) };
 
 section[std::shared_ptr<Section>]
     :  s=statement_group { s };

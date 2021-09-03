@@ -398,7 +398,7 @@ public:
         set_pos(pos);
         return {};
     }
-    void clear_memoization_cache(){
+    void clear_memoization_caches(){
     }
 };
 

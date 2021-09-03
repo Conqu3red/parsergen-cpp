@@ -30,7 +30,7 @@ private:
 
 class Parser {
 public:
-    Parser(std::shared_ptr<TokenStream> token_stream) : token_stream(token_stream) {}
+    Parser(std::unique_ptr<TokenStream> token_stream) : token_stream(std::move(token_stream)) {}
     void fail();
     std::optional<ParseError> error();
     int mark();
@@ -42,7 +42,7 @@ public:
     Position current_pos();
     void clear_memoization_caches();
 protected:
-    std::shared_ptr<TokenStream> token_stream;
+    std::unique_ptr<TokenStream> token_stream;
     int error_pos = -1;
 };
 

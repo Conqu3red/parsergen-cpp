@@ -8,6 +8,7 @@
 #include <functional>
 #include <memory>
 #include <set>
+#include <iostream>
 
 
 namespace Parsergen {
@@ -93,13 +94,31 @@ inline bool regex_search(
     return std::regex_search(sv.begin(), sv.end(), e, flags);
 }
 
-static std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
-    size_t start_pos = 0;
-    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+/// Returns a version of 'str' where every occurrence of
+/// 'find' is substituted by 'replace'.
+/// - Inspired by James Kanze.
+/// - http://stackoverflow.com/questions/20406744/
+static std::string ReplaceAll(
+    const std::string & str ,   // where to work
+    const std::string & find ,  // substitute 'find'
+    const std::string & replace //      by 'replace'
+) {
+    using namespace std;
+    string result;
+    size_t find_len = find.size();
+    size_t pos,from=0;
+    while ( string::npos != ( pos=str.find(find,from) ) ) {
+        result.append( str, from, pos-from );
+        result.append( replace );
+        from = pos + find_len;
     }
-    return str;
+    result.append( str, from , string::npos );
+    return result;
+/*
+    This code might be an improvement to James Kanze's
+    because it uses std::string methods instead of
+    general algorithms [as 'std::search()'].
+*/
 }
 
 static bool endsWith(const std::string& str, const std::string& suffix)
@@ -121,7 +140,27 @@ static std::string normalizeNewlines(std::string string){
 template <typename T>
 void set_union(std::set<T>& a, std::set<T> b)
 {
-  a.insert(b.begin(), b.end());
+    a.insert(b.begin(), b.end());
+}
+
+template <typename T>
+std::set<T> set_intersection(std::set<T> &a, std::set<T> &b)
+{
+    std::set<T> result;
+    for (auto l : a){
+        if (b.find(l) != b.end()) result.insert(l);
+    }
+    return result;
+}
+
+template <typename T>
+inline bool contains(std::vector<T> &vec, T &val){
+    return std::find(vec.begin(), vec.end(), val) != vec.end();
+}
+
+template <typename T>
+inline bool contains(std::vector<T> &vec, const T &val){
+    return std::find(vec.begin(), vec.end(), val) != vec.end();
 }
 
 }

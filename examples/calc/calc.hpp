@@ -17,9 +17,8 @@ using namespace Parsergen;
 
 
 #include <math.h>
-#include "examples/test/test_lexer.hpp"
 
-class TestParser : public Parser {
+class CalcParser : public Parser {
 public:
     using Parser::Parser;
     std::optional<int> start(){
@@ -265,36 +264,7 @@ public:
         set_pos(pos);
         return {};
     }
-    std::map<int, std::tuple<std::optional<int>, int>> __factor__memoization_cache;
     std::optional<int> factor(){
-        auto pos = mark();
-        auto memoized = __factor__memoization_cache.find(pos);
-        std::optional<int> res;
-        int endpos;
-        if (memoized != __factor__memoization_cache.end()) {
-            res = std::get<0>(memoized->second);
-            endpos = std::get<1>(memoized->second);
-            set_pos(endpos);
-        }
-        else {
-            std::optional<int> lastres = std::nullopt;
-            auto lastpos = pos;
-            __factor__memoization_cache[pos] = std::make_tuple(lastres, lastpos);
-            while (true) {
-                set_pos(pos);
-                res = _factor();
-                endpos = mark();
-                if (endpos <= lastpos) break;
-                lastres = res;
-                lastpos = endpos;
-                __factor__memoization_cache[pos] = std::make_tuple(res, endpos);
-            }
-            res = lastres;
-            set_pos(lastpos);
-        }
-        return res;
-    }
-    std::optional<int> _factor(){
         Position start, end;
         int pos = mark();
         for (;;){
@@ -344,36 +314,7 @@ public:
         set_pos(pos);
         return {};
     }
-    std::map<int, std::tuple<std::optional<int>, int>> __item__memoization_cache;
     std::optional<int> item(){
-        auto pos = mark();
-        auto memoized = __item__memoization_cache.find(pos);
-        std::optional<int> res;
-        int endpos;
-        if (memoized != __item__memoization_cache.end()) {
-            res = std::get<0>(memoized->second);
-            endpos = std::get<1>(memoized->second);
-            set_pos(endpos);
-        }
-        else {
-            std::optional<int> lastres = std::nullopt;
-            auto lastpos = pos;
-            __item__memoization_cache[pos] = std::make_tuple(lastres, lastpos);
-            while (true) {
-                set_pos(pos);
-                res = _item();
-                endpos = mark();
-                if (endpos <= lastpos) break;
-                lastres = res;
-                lastpos = endpos;
-                __item__memoization_cache[pos] = std::make_tuple(res, endpos);
-            }
-            res = lastres;
-            set_pos(lastpos);
-        }
-        return res;
-    }
-    std::optional<int> _item(){
         Position start, end;
         int pos = mark();
         for (;;){
@@ -455,11 +396,9 @@ public:
         set_pos(pos);
         return {};
     }
-    void clear_memoization_cache(){
+    void clear_memoization_caches(){
         __expr__memoization_cache.clear();
         __term__memoization_cache.clear();
-        __factor__memoization_cache.clear();
-        __item__memoization_cache.clear();
     }
 };
 

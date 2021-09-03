@@ -73,11 +73,10 @@ namespace JSON {
     }
 
     Value parse(std::string data){
-        JsonLexer l;
-        l.setText(data);
-        l.Lex();
-        auto stream = std::make_shared<TokenStream>(TokenStream(std::make_shared<JsonLexer>(l)));
-        JsonParser p(stream);
+        std::unique_ptr<Lexer> l = std::make_unique<JsonLexer>();
+        l->setText(data);
+        l->Lex();
+        JsonParser p(std::make_unique<TokenStream>(std::move(l)));
         auto result = p.json();
         if (result.has_value()){
             return result.value();
@@ -87,7 +86,7 @@ namespace JSON {
 }
 
 int main(){
-    JsonLexer l;
+    std::unique_ptr<Lexer> l = std::make_unique<JsonLexer>();
     std::ifstream file;
     auto start = std::chrono::steady_clock::now();
     auto end = std::chrono::steady_clock::now();
@@ -105,9 +104,9 @@ int main(){
     std::cout << "Begin Tokenizing...\n";
     start = std::chrono::steady_clock::now();
     
-    l.setText(input);
+    l->setText(input);
     try {
-        l.Lex();
+        l->Lex();
     }
     catch (LexError &e){
         std::cout << e.what() << "\n";
@@ -122,8 +121,7 @@ int main(){
     //for (auto const& tok : l.tokens){
     //    fmt::print("type: '{}', value: '{}'\n", tok.type, tok.value);
     //}
-    auto stream = std::make_shared<TokenStream>(TokenStream(std::make_shared<JsonLexer>(l)));
-    JsonParser p(stream);
+    JsonParser p(std::make_unique<TokenStream>(std::move(l)));
     
     std::cout << "Begin Parsing...\n";
     start = std::chrono::steady_clock::now();
