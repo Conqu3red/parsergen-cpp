@@ -32,7 +32,6 @@ Generator make_generator(std::string grammar){
 #define INTROSPECT(grammar)             \
     auto g = make_generator(grammar);   \
     g.process_sections();               \
-    g.construct_mapping_graph();        \
     Introspector i = Introspector(&g);  \
     i.introspect()
 

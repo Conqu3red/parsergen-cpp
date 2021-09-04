@@ -45,7 +45,7 @@ std::optional<ParseError> Parser::error(){
     //auto end = tok.end;
     return std::optional<ParseError>(
         ParseError(
-            fmt::format("Unexpected token {}", tok.error_format()), 
+            fmt::format("Unexpected token {}", tok.type), 
             tok.start, tok.end,
             tok.start.lineno - 1 < num_lines && num_lines > 0 ? token_stream->get_lines()[tok.start.lineno - 1] : ""
         )

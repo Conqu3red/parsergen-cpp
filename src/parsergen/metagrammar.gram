@@ -9,7 +9,6 @@ namespace Parsergen {
 }'
 
 @class_name = 'GrammarParser'
-@disable_left_recursion = 'true'
 
 parser_definition[std::shared_ptr<ParserDefinition>]
     :  s=section* EOF { std::make_shared<ParserDefinition>(s, POSITION) };

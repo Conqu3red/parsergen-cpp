@@ -46,6 +46,8 @@ protected:
     int error_pos = -1;
 };
 
+static const std::string parsergen_version = "1.0.0";
+
 inline std::string getTokenValueOr(std::optional<Token> &tok, std::string other){
     return tok.has_value() ? tok->value : other;
 }

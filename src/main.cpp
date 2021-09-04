@@ -11,6 +11,8 @@
 #include <sstream>
 
 #include "parsergen/parser_generator.hpp"
+#include "parsergen/parser.hpp"
+
 using namespace Parsergen;
 
 static std::string help_string = R"(
@@ -51,7 +53,7 @@ int main(int argc, char **argv){
     }
 
     if (version){
-        std::cout << "version: " << "1.0.0" << "\n";
+        std::cout << "version: " << parsergen_version << "\n";
         return 0;
     }
 

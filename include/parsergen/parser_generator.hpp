@@ -53,7 +53,6 @@ public:
         _indent -= 1;
     }
 
-    void construct_mapping_graph();
     bool is_left_recursive(std::string name);
     void process_sections();
     void do_introspection();

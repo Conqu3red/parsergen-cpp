@@ -198,18 +198,4 @@ void Introspector::introspect(){
     }
 }
 
-
-// in *every* cycle, *ONE* rule must have left recursion memoization
-
-
-// at some point add support for an any, "." maybe to indicate any token
-
-
-// access violations
-/*
-- old library file
-- clashing implementations/definitions of fmt?? / parser_generator
-- ostream?
-*/
-
 }

@@ -52,6 +52,12 @@ public:
                     break;
                 }
                 auto &p1 = _p1.value();
+                auto _p2 = expect("EOF");
+                if (!_p2.has_value()){
+                    fail();
+                    break;
+                }
+                auto &p2 = _p2.value();
                 end = current_pos();
                 // match:
                 auto &s = _p1.value();
@@ -138,7 +144,7 @@ public:
         set_pos(pos);
         return {};
     }
-    std::optional< std::vector<std::shared_ptr<Statement>> > _loop_11(){
+    std::optional< std::vector<std::shared_ptr<Statement>> > _loop_12(){
         std::vector<std::shared_ptr<Statement>> children;
         for (;;){
             {
@@ -172,7 +178,7 @@ public:
                     break;
                 }
                 auto &p2 = _p2.value();
-                auto _p3 = _loop_11();
+                auto _p3 = _loop_12();
                 if (!_p3.has_value()){
                     fail();
                     break;
@@ -189,7 +195,7 @@ public:
         set_pos(pos);
         return {};
     }
-    std::optional< std::vector<std::shared_ptr<Expr>> > _loop_14(){
+    std::optional< std::vector<std::shared_ptr<Expr>> > _loop_15(){
         std::vector<std::shared_ptr<Expr>> children;
         for (;;){
             {
@@ -205,7 +211,7 @@ public:
         }
         return children;
     }
-    std::optional< std::optional<Token> > _maybe_16(){
+    std::optional< std::optional<Token> > _maybe_17(){
         int pos = mark();
         auto rv = std::make_optional<std::optional<Token>>(std::nullopt);
         rv.value() = std::nullopt;
@@ -230,13 +236,13 @@ public:
                     break;
                 }
                 auto &p1 = _p1.value();
-                auto _p2 = _loop_14();
+                auto _p2 = _loop_15();
                 if (!_p2.has_value()){
                     fail();
                     break;
                 }
                 auto &p2 = _p2.value();
-                auto _p3 = _maybe_16();
+                auto _p3 = _maybe_17();
                 if (!_p3.has_value()){
                     fail();
                     break;
@@ -258,7 +264,7 @@ public:
         set_pos(pos);
         return {};
     }
-    std::optional< std::vector<std::shared_ptr<Expr>> > _loop_19(){
+    std::optional< std::vector<std::shared_ptr<Expr>> > _loop_20(){
         std::vector<std::shared_ptr<Expr>> children;
         for (;;){
             {
@@ -280,7 +286,7 @@ public:
         for (;;){
             {
                 start = current_pos();
-                auto _p1 = _loop_19();
+                auto _p1 = _loop_20();
                 if (!_p1.has_value()){
                     fail();
                     break;
@@ -661,7 +667,7 @@ public:
         set_pos(pos);
         return {};
     }
-    void clear_memoization_cache(){
+    void clear_memoization_caches(){
     }
 };
 
