@@ -6,6 +6,7 @@ INCLUDES := -Iinclude
 SRC_DIR := ./src/parsergen
 OBJ_DIR := ./build/obj
 BIN_DIR := ./bin
+LIB_DIR := ./lib
 BIN_EXT := .exe
 
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
@@ -26,13 +27,13 @@ endif
 .DEFAULT_GOAL := example
 
 libparsergen: $(OBJ_FILES)
-	ar rcs bin/libparsergen.a $(OBJ_FILES) $(FMT_OBJ)
+	ar rcs $(LIB_DIR)/libparsergen.a $(OBJ_FILES) $(FMT_OBJ)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(INCLUDES) $(CXXFLAGS) -c $< -o $@
 
 $(PARSERGEN): libparsergen
-	$(CXX) $(INCLUDES) $(CXXFLAGS) ./src/main.cpp -L$(BIN_DIR) -lparsergen -o $(BIN_DIR)/$(PARSERGEN_NAME)$(BIN_EXT)
+	$(CXX) $(INCLUDES) $(CXXFLAGS) ./src/main.cpp -L$(LIB_DIR) -lparsergen -o $(BIN_DIR)/$(PARSERGEN_NAME)$(BIN_EXT)
 
 fmt:
 	$(CXX) $(INCLUDES) $(CXXFLAGS) -c src/format.cc -o $(FMT_OBJ)
@@ -40,7 +41,7 @@ fmt:
 
 # meta
 bootstrap: libparsergen
-	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/bootstrap_parser.cpp -L$(BIN_DIR) -lparsergen -I. -o $(BIN_DIR)/$@$(BIN_EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/bootstrap_parser.cpp -L$(LIB_DIR) -lparsergen -I. -o $(BIN_DIR)/$@$(BIN_EXT)
 
 metagrammar: libparsergen $(PARSERGEN)
 	$(PARSERGEN) $(SRC_DIR)/metagrammar.gram -o include/parsergen/grammar_parser.hpp
@@ -48,17 +49,17 @@ metagrammar: libparsergen $(PARSERGEN)
 # Calculator
 calc: libparsergen $(PARSERGEN)
 	$(PARSERGEN) examples/calc/calc.gram -o examples/calc/calc.hpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/calc/main.cpp -L$(BIN_DIR) -lparsergen -I. -o $(BIN_DIR)/$@$(BIN_EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/calc/main.cpp -L$(LIB_DIR) -lparsergen -I. -o $(BIN_DIR)/$@$(BIN_EXT)
 
 # JSON parser
 json: libparsergen $(PARSERGEN)
 	$(PARSERGEN) examples/json/json.gram -o examples/json/json_parser.hpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/json/main.cpp -L$(BIN_DIR) -lparsergen -I. -o $(BIN_DIR)/$@$(BIN_EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) examples/json/main.cpp -L$(LIB_DIR) -lparsergen -I. -o $(BIN_DIR)/$@$(BIN_EXT)
 
 test: libparsergen
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -Itests tests/main.cpp -L$(BIN_DIR) -lparsergen -I. -o $(BIN_DIR)/$@$(BIN_EXT)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -Itests tests/main.cpp -L$(LIB_DIR) -lparsergen -I. -o $(BIN_DIR)/$@$(BIN_EXT)
 
 clean:
 	$(RM) $(call FixPath,$(OBJ_DIR)/*.o)
-	$(RM) $(call FixPath,$(BIN_DIR)/*.a)
+	$(RM) $(call FixPath,$(LIB_DIR)/*.a)
 	$(RM) $(call FixPath,$(BIN_DIR)/*$(BIN_EXT))
