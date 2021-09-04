@@ -1,6 +1,6 @@
 #include "parsergen/grammar_ast.hpp"
 #include "parsergen/utils.hpp"
-#include "parsergen/parser_utils.hpp"
+#include "parsergen/parser.hpp"
 #include "parsergen/grammar_parser.hpp"
 #include "parsergen/parser_formatter.hpp"
 #include "parsergen/parser_generator.hpp"

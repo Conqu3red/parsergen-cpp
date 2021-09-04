@@ -1,7 +1,7 @@
 #include "parsergen/lexer.hpp"
 #include "parsergen/grammar_ast.hpp"
 #include "parsergen/utils.hpp"
-#include "parsergen/parser_utils.hpp"
+#include "parsergen/parser.hpp"
 #include "fmt/core.h"
 
 #include <string>

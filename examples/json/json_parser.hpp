@@ -1,7 +1,7 @@
 
 #include "parsergen/lexer.hpp"
 #include "parsergen/utils.hpp"
-#include "parsergen/parser_utils.hpp"
+#include "parsergen/parser.hpp"
 
 #include <list>
 #include <optional>

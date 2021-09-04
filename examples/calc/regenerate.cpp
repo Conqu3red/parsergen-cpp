@@ -1,16 +1,10 @@
-#include "parsergen/grammar_ast.hpp"
-#include "parsergen/utils.hpp"
-#include "parsergen/parser_utils.hpp"
-#include "parsergen/grammar_parser.hpp"
 #include "parsergen/parser_generator.hpp"
 
 #include <iostream>
-#include <fmt/format.h>
 #include <fstream>
 #include <sstream>
 
 using namespace Parsergen;
-using namespace AST;
 
 int main(){
     std::ifstream file;
@@ -24,7 +18,7 @@ int main(){
         std::ofstream f("examples/calc/calc.hpp");
         f << result;
         f.close();
-        fmt::print("Generation complete.\n");
+        std::cout << "Generation complete.\n";
     }
     else {
         std::cout << "Unable to open file" << std::endl;

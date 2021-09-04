@@ -8,8 +8,7 @@ OBJ_DIR := ./build/obj
 BIN_DIR := ./bin
 
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
-OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
-FMT_OBJ := $(OBJ_DIR)/format.o
+OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES)) # %.cpp -> %.o
 
 ifeq ($(OS),Windows_NT) # windows like
 	RM := del /F /Q
@@ -23,6 +22,9 @@ endif
 
 libparsergen: $(OBJ_FILES)
 	ar rcs bin/libparsergen.a $(OBJ_FILES) $(FMT_OBJ)
+
+parsergen-cpp: libparsergen
+	$(CXX) $(INCLUDES) $(CXXFLAGS) ./src/main.cpp -Lbin -lparsergen -o $(BIN_DIR)/$@.exe
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(INCLUDES) $(CXXFLAGS) -c $< -o $@

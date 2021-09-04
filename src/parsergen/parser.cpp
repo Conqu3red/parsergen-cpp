@@ -1,6 +1,6 @@
 #include "fmt/core.h"
 #include <algorithm>
-#include "parsergen/parser_utils.hpp"
+#include "parsergen/parser.hpp"
 #include <iostream>
 
 namespace Parsergen {
