@@ -64,18 +64,18 @@ std::optional<Token> Parser::expect(std::string type){
     auto &tok = peek_token();
     if (tok.type == type){
         token_stream->set_pos(token_stream->mark() + 1);
-        return std::optional<Token>(tok);
+        return tok;
     }
-    return std::nullopt;
+    return {};
 }
 
-std::optional<Token> Parser::expect_contant(std::string value){
+std::optional<Token> Parser::expect_constant(std::string value){
     auto &tok = peek_token();
     if (tok.value == value){
         token_stream->set_pos(token_stream->mark() + 1);
-        return std::optional<Token>(tok);
+        return tok;
     }
-    return std::nullopt;
+    return {};
 }
 
 Token &Parser::peek_token(){

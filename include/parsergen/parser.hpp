@@ -36,7 +36,7 @@ public:
     int mark();
     void set_pos(int pos);
     std::optional<Token> expect(std::string type);
-    std::optional<Token> expect_contant(std::string value);
+    std::optional<Token> expect_constant(std::string value);
     Token &peek_token();
     Token &peek_token(int pos);
     Position current_pos();
