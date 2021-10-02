@@ -159,7 +159,7 @@ Token Lexer::GetNextToken(){
     utils::svmatch sm;
     for (auto const &rule : rules){
         for (auto const &string_pattern : rule.string_patterns){
-            if (source.rfind(string_pattern, 0) == 0){ // matches start of string
+            if (source.compare(0, string_pattern.size(), string_pattern.data()) == 0){ // matches start of string
                 auto length = string_pattern.length();
                 
                 Token tok = Token(rule.name, string_pattern, Position(lineno, column), Position(lineno, column + length));
@@ -196,7 +196,7 @@ Token Lexer::GetNextToken(){
             }
         }
     }
-    std::cout << (int)(source[0]) << "\n";
+    //std::cout << (int)(source[0]) << "\n";
     throw LexError(
         fmt::format("Found Unexpected character '{}' while tokenizing!", source[0]),
         lineno,

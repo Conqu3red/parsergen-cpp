@@ -23,6 +23,3 @@ factor[int]
 item[int]
     :  n=INT { std::stoi(n.value) };
     :  LPAREN e=expr RPAREN { e };
-
-test[int]
-    : item? { 1 };

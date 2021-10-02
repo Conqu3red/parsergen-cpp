@@ -115,7 +115,7 @@ int main(){
     
     end = std::chrono::steady_clock::now();
     diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "Tokenized JSON in " << diff.count() << "ms" << std::endl;
+    fmt::print("Tokenized JSON in {:d} ms ({:d} tokens)\n", diff.count(), l->tokens.size());
     
     //std::cout << "Start string: " << l.getText() << std::endl;
     //for (auto const& tok : l.tokens){

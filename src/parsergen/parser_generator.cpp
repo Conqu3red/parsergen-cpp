@@ -339,19 +339,21 @@ void Generator::pre_process(std::vector<std::shared_ptr<Expr>> &exprs){
 }
 
 void Generator::pre_process(std::shared_ptr<Expr> &expr){
-    resolve(expr, counter);
-    counter++;
+    if (maybe_resolve(expr, counter))
+        counter++;
 }
 
 
-void Generator::resolve(std::shared_ptr<Expr> expr, int &c){
+bool Generator::maybe_resolve(std::shared_ptr<Expr> expr, int &c){
     if (expr->is("ZeroOrMore")) resolve(std::dynamic_pointer_cast<ZeroOrMore>(expr), c);
     else if (expr->is("OneOrMore")) resolve(std::dynamic_pointer_cast<OneOrMore>(expr), c);
     else if (expr->is("ZeroOrOne")) resolve(std::dynamic_pointer_cast<ZeroOrOne>(expr), c);
     else if (expr->is("ExprList")) resolve(std::dynamic_pointer_cast<ExprList>(expr), c);
-    else if (expr->is("NamedItem")) resolve(std::dynamic_pointer_cast<NamedItem>(expr)->expr, c);
-    //else
-    //    throw std::runtime_error(fmt::format("Invalid type '{}'", expr->class_name()));
+    else if (expr->is("NamedItem")) return maybe_resolve(std::dynamic_pointer_cast<NamedItem>(expr)->expr, c);
+    else
+        return false;
+        //throw std::runtime_error(fmt::format("Invalid type '{}'", expr->class_name()));
+    return true;
 }
 
 void Generator::resolve(std::shared_ptr<ZeroOrMore> item, int &c){

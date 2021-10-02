@@ -103,7 +103,7 @@ private:
     void pre_process(std::vector<std::shared_ptr<Expr>> &exprs);
     void pre_process(std::shared_ptr<Expr> &expr);
 
-    void resolve(std::shared_ptr<Expr> expr, int &c);
+    bool maybe_resolve(std::shared_ptr<Expr> expr, int &c);
     void resolve(std::shared_ptr<ZeroOrMore> item, int &c);
     void resolve(std::shared_ptr<OneOrMore> item, int &c);
     void resolve(std::shared_ptr<ZeroOrOne> item, int &c);

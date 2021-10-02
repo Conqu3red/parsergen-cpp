@@ -363,39 +363,6 @@ public:
         set_pos(pos);
         return {};
     }
-    std::optional< std::optional<int> > _maybe_25(){
-        int pos = mark();
-        auto rv = std::make_optional<std::optional<int>>(std::nullopt);
-        rv.value() = std::nullopt;
-        auto _p0 = item();
-        if (!_p0.has_value()){
-            set_pos(pos);
-            return rv;
-        }
-        auto &p0 = _p0.value();
-        rv.value() = _p0;
-        return rv;
-    }
-    std::optional<int> test(){
-        Position start, end;
-        int pos = mark();
-        for (;;){
-            {
-                start = current_pos();
-                auto _p1 = _maybe_25();
-                if (!_p1.has_value()){
-                    fail();
-                    break;
-                }
-                auto &p1 = _p1.value();
-                end = current_pos();
-                // match:
-                return 1;
-            }
-        }
-        set_pos(pos);
-        return {};
-    }
     void clear_memoization_caches(){
         __expr__memoization_cache.clear();
         __term__memoization_cache.clear();
