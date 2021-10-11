@@ -188,11 +188,18 @@ void Introspector::introspect(){
 
     std::set<std::string> apply_recursion_correction;
     // TODO: based on the sets of cycles, determine which nodes need left recursion memoization
+    
+    auto comparator = [](std::set<std::string> &a, std::set<std::string> &b) -> bool {
+        return a.size() > b.size();
+    };
+
+    std::sort(completed_cycle_permutations.begin(), completed_cycle_permutations.end(), comparator);
+
     for (size_t i = 0; i < completed_cycle_permutations.size(); i++){
         auto cycle = completed_cycle_permutations[i];
         if (utils::set_intersection(apply_recursion_correction, cycle).empty()){
             auto r = all_cycles[i][0];
-            apply_recursion_correction.insert(r);
+            utils::set_union(apply_recursion_correction, cycle);
             rule_info[r].flagged = true;
         }
     }

@@ -391,7 +391,7 @@ void Generator::resolve(std::shared_ptr<OneOrMore> item, int &c){
     pre_process(item->expr);
     auto return_type = get_return_type(item->expr);
     item->handle_name = fmt::format("_loop_{:d}", c);
-    emit(fmt::format("std::optional< std::vector<{}> > {}{}(){{", return_type, item->handle_name));
+    emit(fmt::format("std::optional< std::vector<{}> > {}(){{", return_type, item->handle_name));
     indent();
         emit(fmt::format("std::vector<{}> children;", return_type));
         emit("for (;;){");

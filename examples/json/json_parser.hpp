@@ -144,7 +144,7 @@ public:
         set_pos(pos);
         return {};
     }
-    std::optional<std::tuple<Token, std::pair<std::string, JSON::Value>>> _expr_list_11(){
+    std::optional<std::tuple<Token, std::pair<std::string, JSON::Value>>> _expr_list_0(){
         Position start, end;
         int pos = mark();
         for (;;){
@@ -168,12 +168,12 @@ public:
         set_pos(pos);
         return {};
     }
-    std::optional< std::vector<decltype(std::declval<JsonParser>()._expr_list_11().value_or(NULL))> > _loop_12(){
-        std::vector<decltype(std::declval<JsonParser>()._expr_list_11().value_or(NULL))> children;
+    std::optional< std::vector<decltype(std::declval<JsonParser>()._expr_list_0().value_or(NULL))> > _loop_1(){
+        std::vector<decltype(std::declval<JsonParser>()._expr_list_0().value_or(NULL))> children;
         for (;;){
             {
                 int pos = mark();
-                auto _p0 = _expr_list_11();
+                auto _p0 = _expr_list_0();
                 if (!_p0.has_value()){
                     set_pos(pos);
                     break;
@@ -184,7 +184,7 @@ public:
         }
         return children;
     }
-    std::optional<std::tuple<std::pair<std::string, JSON::Value>, decltype(std::declval<JsonParser>()._loop_12().value_or(NULL))>> _expr_list_13(){
+    std::optional<std::tuple<std::pair<std::string, JSON::Value>, decltype(std::declval<JsonParser>()._loop_1().value_or(NULL))>> _expr_list_2(){
         Position start, end;
         int pos = mark();
         for (;;){
@@ -195,7 +195,7 @@ public:
                 break;
             }
             auto &p1 = _p1.value();
-            auto _p2 = _loop_12();
+            auto _p2 = _loop_1();
             if (!_p2.has_value()){
                 fail();
                 break;
@@ -208,11 +208,11 @@ public:
         set_pos(pos);
         return {};
     }
-    std::optional< std::optional<decltype(std::declval<JsonParser>()._expr_list_13().value_or(NULL))> > _maybe_14(){
+    std::optional< std::optional<decltype(std::declval<JsonParser>()._expr_list_2().value_or(NULL))> > _maybe_3(){
         int pos = mark();
-        auto rv = std::make_optional<std::optional<decltype(std::declval<JsonParser>()._expr_list_13().value_or(NULL))>>(std::nullopt);
+        auto rv = std::make_optional<std::optional<decltype(std::declval<JsonParser>()._expr_list_2().value_or(NULL))>>(std::nullopt);
         rv.value() = std::nullopt;
-        auto _p0 = _expr_list_13();
+        auto _p0 = _expr_list_2();
         if (!_p0.has_value()){
             set_pos(pos);
             return rv;
@@ -233,7 +233,7 @@ public:
                     break;
                 }
                 auto &p1 = _p1.value();
-                auto _p2 = _maybe_14();
+                auto _p2 = _maybe_3();
                 if (!_p2.has_value()){
                     fail();
                     break;
@@ -288,7 +288,7 @@ public:
         set_pos(pos);
         return {};
     }
-    std::optional<std::tuple<Token, JSON::Value>> _expr_list_23(){
+    std::optional<std::tuple<Token, JSON::Value>> _expr_list_4(){
         Position start, end;
         int pos = mark();
         for (;;){
@@ -312,12 +312,12 @@ public:
         set_pos(pos);
         return {};
     }
-    std::optional< std::vector<decltype(std::declval<JsonParser>()._expr_list_23().value_or(NULL))> > _loop_24(){
-        std::vector<decltype(std::declval<JsonParser>()._expr_list_23().value_or(NULL))> children;
+    std::optional< std::vector<decltype(std::declval<JsonParser>()._expr_list_4().value_or(NULL))> > _loop_5(){
+        std::vector<decltype(std::declval<JsonParser>()._expr_list_4().value_or(NULL))> children;
         for (;;){
             {
                 int pos = mark();
-                auto _p0 = _expr_list_23();
+                auto _p0 = _expr_list_4();
                 if (!_p0.has_value()){
                     set_pos(pos);
                     break;
@@ -328,7 +328,7 @@ public:
         }
         return children;
     }
-    std::optional<std::tuple<JSON::Value, decltype(std::declval<JsonParser>()._loop_24().value_or(NULL))>> _expr_list_25(){
+    std::optional<std::tuple<JSON::Value, decltype(std::declval<JsonParser>()._loop_5().value_or(NULL))>> _expr_list_6(){
         Position start, end;
         int pos = mark();
         for (;;){
@@ -339,7 +339,7 @@ public:
                 break;
             }
             auto &p1 = _p1.value();
-            auto _p2 = _loop_24();
+            auto _p2 = _loop_5();
             if (!_p2.has_value()){
                 fail();
                 break;
@@ -352,11 +352,11 @@ public:
         set_pos(pos);
         return {};
     }
-    std::optional< std::optional<decltype(std::declval<JsonParser>()._expr_list_25().value_or(NULL))> > _maybe_26(){
+    std::optional< std::optional<decltype(std::declval<JsonParser>()._expr_list_6().value_or(NULL))> > _maybe_7(){
         int pos = mark();
-        auto rv = std::make_optional<std::optional<decltype(std::declval<JsonParser>()._expr_list_25().value_or(NULL))>>(std::nullopt);
+        auto rv = std::make_optional<std::optional<decltype(std::declval<JsonParser>()._expr_list_6().value_or(NULL))>>(std::nullopt);
         rv.value() = std::nullopt;
-        auto _p0 = _expr_list_25();
+        auto _p0 = _expr_list_6();
         if (!_p0.has_value()){
             set_pos(pos);
             return rv;
@@ -377,7 +377,7 @@ public:
                     break;
                 }
                 auto &p1 = _p1.value();
-                auto _p2 = _maybe_26();
+                auto _p2 = _maybe_7();
                 if (!_p2.has_value()){
                     fail();
                     break;
