@@ -199,7 +199,7 @@ void Introspector::introspect(){
         auto cycle = completed_cycle_permutations[i];
         if (utils::set_intersection(apply_recursion_correction, cycle).empty()){
             auto r = all_cycles[i][0];
-            utils::set_union(apply_recursion_correction, cycle);
+            apply_recursion_correction.insert(r);
             rule_info[r].flagged = true;
         }
     }
